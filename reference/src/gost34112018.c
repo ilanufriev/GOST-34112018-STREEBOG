@@ -414,7 +414,7 @@ void Start(struct GOST34112018_Context   *ctx,
     Stage2(ctx, message, size);
 }
 
-void GOST34112018_GetHash(const unsigned char          *message,
+void GOST34112018_Hash(const unsigned char          *message,
                           const unsigned long long      message_size,
                           unsigned char                *hash,
                           const GOST34112018_HashSize_t hash_size)

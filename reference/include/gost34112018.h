@@ -9,7 +9,7 @@ typedef enum {
     GOST34112018_Hash512 = 64,
 } GOST34112018_HashSize_t;
 
-void GOST34112018_GetHash(const unsigned char          *message,
+void GOST34112018_Hash(const unsigned char          *message,
                           const unsigned long long      message_size,
                           unsigned char                *hash,
                           const GOST34112018_HashSize_t hash_size);
