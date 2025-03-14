@@ -13,10 +13,10 @@ set(TARGET_LIB gost34112018)
 add_executable(${TARGET_TEST} src/test/test.c)
 
 # main library
-add_library(${TARGET_LIB} SHARED src/lib/gost34112018.c)
+add_library(${TARGET_LIB} SHARED src/lib/gost34112018_optimized.c)
 
 target_include_directories(${TARGET_LIB} PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_include_directories(${TARGET_LIB} PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(${TARGET_LIB} PUBLIC ${CMAKE_SOURCE_DIR}/src/lib)
 
 target_include_directories(${TARGET_TEST} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(${TARGET_TEST} PUBLIC ${TARGET_LIB})

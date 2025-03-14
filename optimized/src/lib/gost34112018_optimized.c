@@ -1,10 +1,61 @@
-/// @file gost34112018.c
 /// @copyright Anufriev Ilia, anufriewwi@rambler.ru. All rights reserved.
 
 #include "gost34112018.h"
-#include "gost34112018_private.h"
+#include "gost34112018_optimized_private.h"
 
 #define MAX_UINT64 0xFFFFFFFFFFFFFFFF
+
+#define ARRAY_REV_ACCESS(__arr, __size, __index) \
+    ({__arr[__size - 1 - __index]})
+
+void LINEAR_TRANSFORM_TABLE(const GostU64 *A, const GostU64 A_size,
+                            const GostU8  *P, const GostU64 P_size,
+                                  GostU64  out[8][256])
+{
+    for (GostU64 i = 0; i < 8; i++)
+    {
+        for (GostU64 j = 0; j < P_size; j++)
+        {
+            GostU64 accum = 0;
+            for (GostU64 k = 0; k < 8; k++)
+            {
+                if ((P[j] & (((GostU8) 1) << k)) != 0)
+                {
+                    accum ^= A[A_size - 1 - (8 * i + k)];
+                }
+            }
+
+            out[i][j] = accum;
+        }
+    }
+}
+
+void PRECOMPUTE_TRANSFORM_TABLE()
+{
+    GostU64 table[8][256];
+
+    LINEAR_TRANSFORM_TABLE(A, 64, P, 256, table);
+
+    for (int i = 0; i < 8; i++)
+    {
+        printf("{\n");
+        for (int j = 0; j < 256; j++)
+        {
+            if (j % 4 == 0 && j != 0)
+            {
+                printf("\n    ");
+            }
+
+            if (j == 0)
+            {
+                printf("    ");
+            }
+            printf("0x%016llx, ", table[i][j]);
+        }
+        printf("\n},");
+        putc('\n', stdout);
+    }
+}
 
 const union Vec512 INIT_VECTOR_256 = {
     .qwords = {
@@ -58,11 +109,11 @@ const union Vec512 VECTOR_512 = {
     },
 };
 
-static inline uint64_t Uint64_ReverseByteOrder(const uint64_t x)
+static inline GostU64 Uint64_ReverseByteOrder(const GostU64 x)
 {
-    uint64_t result = 0;
-    uint8_t *result_bytes = (uint8_t *) (&result);
-    uint8_t *x_bytes = (uint8_t *) (&x);
+    GostU64 result = 0;
+    GostU8 *result_bytes = (GostU8 *) (&result);
+    GostU8 *x_bytes = (GostU8 *) (&x);
 
     result_bytes[7] = x_bytes[0];
     result_bytes[6] = x_bytes[1];
@@ -82,7 +133,7 @@ static inline void PrintVec(const union Vec512 *vec)
     printf("    ");
     for (int i = 0; i < VEC512_QWORDS; i++)
     {
-        uint64_t qword_reversed = Uint64_ReverseByteOrder(vec->qwords[i]);
+        GostU64 qword_reversed = Uint64_ReverseByteOrder(vec->qwords[i]);
         printf("%016llx ", qword_reversed);
     }
 
@@ -96,11 +147,18 @@ static inline void PrintVec(const union Vec512 *out)
 }
 #endif // DEBUG
 
+/**
+ * @brief       Vec512 addition operation.
+ * @param       in1 - first operand.
+ * @param       in2 - second operand.
+ * @param       out - return pointer.
+ */
+static
 void Vec512_Add(const union Vec512 *in1,
                 const union Vec512 *in2,
                       union Vec512 *out)
 {
-    uint64_t carry = 0;
+    GostU64 carry = 0;
 
     log_d("Added vectors:");
     log_d("In1: ");
@@ -108,14 +166,11 @@ void Vec512_Add(const union Vec512 *in1,
     log_d("In2: ");
     PrintVec(in2);
 
-    for (int i = VEC512_QWORDS - 1; i >= 0; i--)
+    for (int i = 0; i < VEC512_QWORDS; i++)
     {
-        uint64_t in1_reverse = Uint64_ReverseByteOrder(in1->qwords[i]);
-        uint64_t in2_reverse = Uint64_ReverseByteOrder(in2->qwords[i]);
+        out->qwords[i] = in1->qwords[i] + in2->qwords[i] + carry;
 
-        uint64_t out_reverse = in1_reverse + in2_reverse + carry;
-
-        if (in2_reverse > (MAX_UINT64 - in1_reverse))
+        if (in2->qwords[i] > (MAX_UINT64 - in1->qwords[i]))
         {
             carry = 1;
         }
@@ -123,14 +178,19 @@ void Vec512_Add(const union Vec512 *in1,
         {
             carry = 0;
         }
-
-        out->qwords[i] = Uint64_ReverseByteOrder(out_reverse);
     }
 
     log_d("Out: ");
     PrintVec(out);
 }
 
+/**
+ * @brief       Vec512 XOR operation.
+ * @param       in1 - first operand.
+ * @param       in2 - second operand.
+ * @param       out - return pointer.
+ */
+static
 void Vec512_Xor(const union Vec512 *in1,
                 const union Vec512 *in2,
                       union Vec512 *out)
@@ -150,7 +210,13 @@ void Vec512_Xor(const union Vec512 *in1,
     PrintVec(out);
 }
 
-void Uint64ToVec512(const uint64_t x, union Vec512 *out)
+/**
+ * @brief       Uint64 to Vec512 conversion function.
+ * @param       x - conversion operand.
+ * @param       out - return pointer.
+ */
+static
+void Uint64ToVec512(const GostU64 x, union Vec512 *out)
 {
     out->qwords[7] = Uint64_ReverseByteOrder(x);
     out->qwords[6] = 0;
@@ -162,6 +228,13 @@ void Uint64ToVec512(const uint64_t x, union Vec512 *out)
     out->qwords[0] = 0;
 }
 
+/**
+ * @brief       X transformation of the algorithm.
+ * @param       a - argument 'a', according to the standard.
+ * @param       k - argument 'k', according to the standard.
+ * @param       out - return pointer.
+ */
+static
 void XTransform(const union Vec512 *a, const union Vec512 *k, union Vec512 *out)
 {
     log_d("X transformation:");
@@ -176,6 +249,12 @@ void XTransform(const union Vec512 *a, const union Vec512 *k, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+ * @brief       S transformation of the algorithm.
+ * @param       a - argument 'a', according to the standard.
+ * @param       out - return pointer.
+ */
+static
 void STransform(const union Vec512 *a, union Vec512 *out)
 {
     log_d("S transformation:");
@@ -191,6 +270,12 @@ void STransform(const union Vec512 *a, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+ * @brief       P transformation of the algorithm.
+ * @param       a - argument 'a', according to the standard.
+ * @param       out - return pointer.
+ */
+static
 void PTransform(const union Vec512 *a, union Vec512 *out)
 {
     log_d("P transformation:");
@@ -206,6 +291,12 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+ * @brief       L transformation of the algorithm.
+ * @param       a - argument 'a', according to the standard.
+ * @param       out - return pointer.
+ */
+static
 void LTransform(const union Vec512 *a, union Vec512 *out)
 {
     log_d("L transformation:");
@@ -214,8 +305,8 @@ void LTransform(const union Vec512 *a, union Vec512 *out)
 
     for (int i = 0; i < VEC512_QWORDS; i++)
     {
-        uint64_t b = Uint64_ReverseByteOrder(a->qwords[i]);
-        uint64_t c = 0;
+        GostU64 b = Uint64_ReverseByteOrder(a->qwords[i]);
+        GostU64 c = 0;
 
         for (int j = 0; j < 64; j++)
         {
@@ -238,7 +329,8 @@ void LTransform(const union Vec512 *a, union Vec512 *out)
     PrintVec(out);
 }
 
-void K_i(const uint8_t i, const union Vec512 *prev_K, union Vec512 *out)
+static
+void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
 {
     union Vec512 r1, r2;
 
@@ -261,6 +353,7 @@ void K_i(const uint8_t i, const union Vec512 *prev_K, union Vec512 *out)
     PrintVec(out);
 }
 
+static
 void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
 {
     union Vec512 r1, r2, new_m, prev_K;
@@ -300,6 +393,7 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     PrintVec(out);
 }
 
+static
 void G_N(const union Vec512 *h,
          const union Vec512 *m,
          const union Vec512 *N,
@@ -329,16 +423,33 @@ void G_N(const union Vec512 *h,
     PrintVec(out);
 }
 
-void SplitMessage512(const uint8_t *message,
-                     const uint64_t size,
+/**
+ * @brief       This function takes message in natural ("as is") byte order,
+ *              and takes a 512-bit long part from it, starting from the end of
+ *              the message. While splitting, it also reverses the 512-bit block into
+ *              little endian-byte order.
+ * @param       message - message to sliced into 512-bit blocks.
+ * @param       size - size of the message.
+ * @param       out - a return pointer.
+ */
+static
+void SplitMessage512(const GostU8 *message,
+                     const GostU64 size,
                      union Vec512  *out)
 {
-    for (uint64_t i = 0; (i < VEC512_SIZE) && (i < size); i++)
+    for (GostU64 i = 0; (i < VEC512_SIZE) && (i < size); i++)
     {
-        out->bytes[VEC512_SIZE - 1 - i] = message[size - 1 - i];
+        out->bytes[i] = message[size - 1 - i];
     }
 }
 
+/**
+ * @brief       Initialize GOST34112018 context. This should be done
+ *              before any computations take place.
+ * @param       ctx - input pointer, context to be initialized.
+ * @param       init_vector - initialization vector for context.
+ */
+static
 void InitContext(struct GOST34112018_Context *ctx,
                  const union  Vec512         *init_vector)
 {
@@ -347,11 +458,18 @@ void InitContext(struct GOST34112018_Context *ctx,
     ctx->sigma = ZERO_VECTOR_512;
 }
 
+/**
+ * @brief       Stage 3 of the hashing algorithm.
+ * @param       ctx - current context of the algorithm.
+ * @param       message - message of size less than 512 bits.
+ * @param       size - size of the message.
+ */
+static
 void Stage3(struct GOST34112018_Context *ctx,
-            const  uint8_t              *message,
-            const  uint64_t              size)
+            const  GostU8              *message,
+            const  GostU64              size)
 {
-    union Vec512  r1, r2;
+    union Vec512  r1;
     union Vec512  m       = ZERO_VECTOR_512;
     union Vec512 *h       = &ctx->h;
     union Vec512 *N       = &ctx->N;
@@ -375,12 +493,19 @@ void Stage3(struct GOST34112018_Context *ctx,
     G_N(h, sigma, &ZERO_VECTOR_512, h);
 }
 
+/**
+ * @brief       Stage 2 of the hashing algorithm.
+ * @param       ctx - current context of the algorithm.
+ * @param       message - message of size more than 512 bits.
+ * @param       size - size of the message.
+ */
+static
 void Stage2(struct GOST34112018_Context *ctx,
-            const  uint8_t              *message,
-            const  uint64_t              size)
+            const  GostU8               *message,
+            const  GostU64               size)
 {
-    uint64_t current_size = size;
-    union Vec512  r1, r2;
+    GostU64 current_size = size;
+    union Vec512  r1;
     union Vec512  m;
     union Vec512 *h      = &ctx->h;
     union Vec512 *N      = &ctx->N;
@@ -407,25 +532,33 @@ void Stage2(struct GOST34112018_Context *ctx,
     Stage3(ctx, message, current_size);
 }
 
+/**
+ * @brief       Start the hashing algorithm
+ * @param       ctx - current context of the algorithm.
+ * @param       message - message to be hashed.
+ * @param       size - size of the message.
+ */
+static
 void Start(struct GOST34112018_Context   *ctx,
-           const  uint8_t                *message,
-           const  uint64_t                size)
+           const  GostU8                 *message,
+           const  GostU64                 size)
 {
     Stage2(ctx, message, size);
 }
 
 void GOST34112018_Hash(const unsigned char          *message,
-                          const unsigned long long      message_size,
-                          unsigned char                *hash,
-                          const GOST34112018_HashSize_t hash_size)
+                       const unsigned long long      message_size,
+                       unsigned char                *hash,
+                       const GOST34112018_HashSize_t hash_size)
 {
     struct GOST34112018_Context ctx;
     InitContext(&ctx, hash_size == GOST34112018_Hash512 ? &INIT_VECTOR_512
                                                         : &INIT_VECTOR_256);
     Start(&ctx, message, message_size);
 
-    for (int i = 0; i < hash_size; i++)
+    for (GostU32 i = 0; i < hash_size; i++)
     {
         hash[i] = ctx.h.bytes[i];
     }
 }
+

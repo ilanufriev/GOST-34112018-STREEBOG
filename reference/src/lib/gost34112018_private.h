@@ -12,7 +12,7 @@
     #define log_d(__fmd, ...) ;
 #endif // DEBUG
 
-enum CONSTANTS
+enum GOST_34112018_CONSTANTS
 {
     BYTE_SIZE     = (1 * 8), // bits in byte
     WORD_SIZE     = (2 * 8), // bits in word (16-bit integer)
@@ -29,23 +29,23 @@ enum CONSTANTS
     BLOCK_SIZE    = 512 / BYTE_SIZE,
 };
 
-typedef unsigned long long   uint64_t;
-typedef unsigned int         uint32_t;
-typedef unsigned short       uint16_t;
-typedef unsigned char        uint8_t;
+typedef unsigned long long   GostU64;
+typedef unsigned int         GostU32;
+typedef unsigned short       GostU16;
+typedef unsigned char        GostU8;
 
-typedef long long            int64_t;
-typedef int                  int32_t;
-typedef short                int16_t;
-typedef char                 int8_t;
+typedef long long            GostI64;
+typedef int                  GostI32;
+typedef short                GostI16;
+typedef char                 GostI8;
 
-typedef enum { false, true } bool;
+typedef enum { false, true } GostBool;
 
 union Vec512 {
-    uint8_t  bytes  [VEC512_BYTES];
-    uint16_t words  [VEC512_WORDS];
-    uint32_t dwords [VEC512_DWORDS];
-    uint64_t qwords [VEC512_QWORDS];
+    GostU8  bytes  [VEC512_BYTES];
+    GostU16 words  [VEC512_WORDS];
+    GostU32 dwords [VEC512_DWORDS];
+    GostU64 qwords [VEC512_QWORDS];
 };
 
 extern const union Vec512 INIT_VECTOR_256;
@@ -57,7 +57,7 @@ struct GOST34112018_Context {
     union Vec512 sigma;
 };
 
-uint8_t P[256] = {
+GostU8 P[256] = {
     252, 238, 221,  17, 207, 110,  49,  22,
     251, 196, 250, 218,  35, 197,   4,  77,
     233, 119, 240, 219, 147,  46, 153, 186,
@@ -92,7 +92,7 @@ uint8_t P[256] = {
     209, 102, 175, 194,  57,  75,  99, 182
 };
 
-uint8_t t[64] = {
+GostU8 t[64] = {
     0,  8, 16, 24, 32, 40, 48, 56,
     1,  9, 17, 25, 33, 41, 49, 57,
     2, 10, 18, 26, 34, 42, 50, 58,
@@ -109,7 +109,7 @@ enum
     C_SIZE = 12,
 };
 
-uint64_t A[64] = {
+GostU64 A[64] = {
     0x8e20faa72ba0b470, 0x47107ddd9b505a38, 0xad08b0e0c3282d1c, 0xd8045870ef14980e,
     0x6c022c38f90a4c07, 0x3601161cf205268d, 0x1b8e0b0e798c13c8, 0x83478b07b2468764,
     0xa011d380818e8f40, 0x5086e740ce47c920, 0x2843fd2067adea10, 0x14aff010bdd87508,
