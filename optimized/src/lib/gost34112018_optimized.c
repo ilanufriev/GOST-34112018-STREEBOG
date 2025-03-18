@@ -2,12 +2,19 @@
 
 #include "gost34112018.h"
 #include "gost34112018_optimized_private.h"
+#include "gost34112018_optimized_precomp.h"
+#include <stdio.h>
 
 #define MAX_UINT64 0xFFFFFFFFFFFFFFFF
 
-#define ARRAY_REV_ACCESS(__arr, __size, __index) \
-    ({__arr[__size - 1 - __index]})
+#define AS(__value, __as) \
+    ((__as) (__value))
 
+/**
+    @note       Where 'i' is a sequence number of the byte in 64-bit number NUM (i = 0 is LSB)
+                'j' is a value of the byte NUM[i]. To compute LP transform, one would for each
+                i-th number in NUM find TABLE[i][NUM[i]] and XOR it with an accumulator value
+*/
 void LINEAR_TRANSFORM_TABLE(const GostU64 *A, const GostU64 A_size,
                             const GostU8  *P, const GostU64 P_size,
                                   GostU64  out[8][256])
@@ -29,6 +36,7 @@ void LINEAR_TRANSFORM_TABLE(const GostU64 *A, const GostU64 A_size,
         }
     }
 }
+
 
 void PRECOMPUTE_TRANSFORM_TABLE()
 {
@@ -130,15 +138,26 @@ static inline GostU64 Uint64_ReverseByteOrder(const GostU64 x)
 #ifdef DEBUG
 static inline void PrintVec(const union Vec512 *vec)
 {
-    printf("    ");
-    for (int i = 0; i < VEC512_QWORDS; i++)
-    {
-        GostU64 qword_reversed = Uint64_ReverseByteOrder(vec->qwords[i]);
-        printf("%016llx ", qword_reversed);
-    }
+    // printf("    ");
+    // for (int i = 0; i < VEC512_QWORDS; i++)
+    // {
+    //     GostU64 qword_reversed = vec->qwords[i];
+    //     printf("%016llx ", qword_reversed);
+    // }
 
+    // printf("\n");
+    // fflush(stdout);
+
+    printf("    ");
+    for (GostU32 i = 0; i < VEC512_BYTES; i++)
+    {
+        if (i != 0 && i % 8 == 0)
+        {
+            printf(" ");
+        }
+        printf("%02hhx", vec->bytes[i]);
+    }
     printf("\n");
-    fflush(stdout);
 }
 #else
 static inline void PrintVec(const union Vec512 *out)
@@ -201,7 +220,7 @@ void Vec512_Xor(const union Vec512 *in1,
     log_d("In2: ");
     PrintVec(in2);
 
-    for (int i = VEC512_QWORDS - 1; i >= 0; i--)
+    for (int i = 0; i < VEC512_QWORDS; i++)
     {
         out->qwords[i] = in1->qwords[i] ^ in2->qwords[i];
     }
@@ -319,7 +338,34 @@ void LTransform(const union Vec512 *a, union Vec512 *out)
                 c ^= Uint64_ReverseByteOrder(A[A_SIZE - 1 - j]);
             }
 
+            log_d("c = %llx", c);
             b = b >> 1;
+        }
+
+        out->qwords[i] = c;
+    }
+
+    log_d("Out: ");
+    PrintVec(out);
+}
+
+static
+void PLTransform(const union Vec512 *a, union Vec512 *out)
+{
+    log_d("PL transformation:");
+    log_d("a: ");
+    PrintVec(a);
+
+    for (GostU32 i = 0; i < VEC512_QWORDS; i++)
+    {
+        GostU64 c = 0;
+        for (GostU64 j = 0; j < sizeof(GostU64); j++)
+        {
+            GostU64 byte = ((a->qwords[i]) >> (j * 8)) & 0xFF;
+            log_d("byte at %llu of qword %u is %hhx", j, i, (GostU8) byte);
+            
+            c ^= PL_transform_precomp[j][byte];
+            log_d("c = 0x%08llx", c);
         }
 
         out->qwords[i] = c;
@@ -346,8 +392,9 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
 
     Vec512_Xor(prev_K, C[i - 1], &r1);
     STransform(&r1, &r2);
-    PTransform(&r2, &r1);
-    LTransform(&r1, out);
+    // PTransform(&r2, &r1);
+    // LTransform(&r1, out);
+    PLTransform(&r2, out);
 
     log_d("Out: ");
     PrintVec(out);
@@ -371,8 +418,9 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     // K_1 = K
     XTransform(m, K, &r1);
     STransform(&r1, &r2);
-    PTransform(&r2, &r1);
-    LTransform(&r1, &new_m);
+    // PTransform(&r2, &r1);
+    // LTransform(&r1, &new_m);
+    PLTransform(&r2, &new_m);
 
     prev_K = *K;
 
@@ -382,8 +430,9 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
         K_i(i, &prev_K, &prev_K);
         XTransform(&new_m, &prev_K, &r1);
         STransform(&r1, &r2);
-        PTransform(&r2, &r1);
-        LTransform(&r1, &new_m);
+        // PTransform(&r2, &r1);
+        // LTransform(&r1, &new_m);
+        PLTransform(&r2, &new_m);
     }
 
     K_i(C_SIZE, &prev_K, &prev_K);
@@ -412,12 +461,13 @@ void G_N(const union Vec512 *h,
     Vec512_Xor(h, N, &r1);
 
     STransform(&r1, &r2);
-    PTransform(&r2, &r1);
-    LTransform(&r1, &r2);
+    // PTransform(&r2, &r1);
+    // LTransform(&r1, &r2);
+    PLTransform(&r2, &r1);
 
-    E(&r2, m, &r1);
-    Vec512_Xor(&r1, h, &r2);
-    Vec512_Xor(&r2, m, out);
+    E(&r1, m, &r2);
+    Vec512_Xor(&r2, h, &r1);
+    Vec512_Xor(&r1, m, out);
 
     log_d("Out: ");
     PrintVec(out);
@@ -435,7 +485,7 @@ void G_N(const union Vec512 *h,
 static
 void SplitMessage512(const GostU8 *message,
                      const GostU64 size,
-                     union Vec512  *out)
+                     union Vec512 *out)
 {
     for (GostU64 i = 0; (i < VEC512_SIZE) && (i < size); i++)
     {
@@ -479,7 +529,7 @@ void Stage3(struct GOST34112018_Context *ctx,
     SplitMessage512(message, size, &m);
     Uint64ToVec512(size * BYTE_SIZE, &size512);
 
-    m.bytes[BLOCK_SIZE - size - 1] = 0x01; // padding
+    m.bytes[size] = 0x01; // padding
 
     G_N(h, &m, N, h);
 

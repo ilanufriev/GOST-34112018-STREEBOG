@@ -5,7 +5,7 @@
 
 #include "gost34112018_optimized_private.h"
 
-const GostU64 L_transform_precomp[8][256] = {
+const GostU64 PL_transform_precomp[8][256] = {
     {
         0xd01f715b5c7ef8e6, 0x16fa240980778325, 0xa8a42e857ee049c8, 0x6ac1068fa186465b,
         0x6e417bd7a2e9320b, 0x665c8167a437daab, 0x7666681aa89617f6, 0x4b959163700bdcf5,

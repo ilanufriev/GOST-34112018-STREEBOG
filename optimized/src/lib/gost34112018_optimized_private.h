@@ -41,7 +41,7 @@ typedef char                 GostI8;
 typedef enum { false, true } GostBool;
 
 /**
- * @brief       Little-endian Vec512 (unisgned 512-bit number).
+ * @brief       Little-endian unsigned 512-bit number.
  */
 union Vec512
 {

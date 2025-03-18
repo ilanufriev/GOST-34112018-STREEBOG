@@ -2,7 +2,8 @@
 #include "stdio.h"
 #include "assert.h"
 
-#ifdef ENABLED
+#define TESTS_ENABLED
+#ifdef TESTS_ENABLED
 
 typedef enum { false, true } bool;
 
@@ -32,7 +33,7 @@ bool BytesEqual(const unsigned char *lhs,
     return true;
 }
 
-void Test()
+void Test(void)
 {
     unsigned char message[] = {
 		0x32, 0x31, 0x30, 0x39, 0x38, 0x37, 0x36, 0x35,
@@ -77,7 +78,7 @@ void Test()
     log_d("Hash 256 OK!");
 }
 
-void Test2()
+void Test2(void)
 {
     const unsigned char message[] = {
         0xfb, 0xe2, 0xe5, 0xf0, 0xee, 0xe3, 0xc8, 0x20,
@@ -126,7 +127,7 @@ void Test2()
     log_d("Hash256 OK!");
 }
 
-void Test3()
+void Test3(void)
 {
     const unsigned char message[] = {
         0xfb, 0xe2, 0xe5, 0xf0, 0xee, 0xe3, 0xc8, 0x20,
