@@ -338,7 +338,6 @@ void LTransform(const union Vec512 *a, union Vec512 *out)
                 c ^= Uint64_ReverseByteOrder(A[A_SIZE - 1 - j]);
             }
 
-            log_d("c = %llx", c);
             b = b >> 1;
         }
 
@@ -362,10 +361,7 @@ void PLTransform(const union Vec512 *a, union Vec512 *out)
         for (GostU64 j = 0; j < sizeof(GostU64); j++)
         {
             GostU64 byte = ((a->qwords[i]) >> (j * 8)) & 0xFF;
-            log_d("byte at %llu of qword %u is %hhx", j, i, (GostU8) byte);
-            
             c ^= PL_transform_precomp[j][byte];
-            log_d("c = 0x%08llx", c);
         }
 
         out->qwords[i] = c;
@@ -391,10 +387,10 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
     }
 
     Vec512_Xor(prev_K, C[i - 1], &r1);
-    STransform(&r1, &r2);
+    // STransform(&r1, &r2);
     // PTransform(&r2, &r1);
     // LTransform(&r1, out);
-    PLTransform(&r2, out);
+    PLTransform(&r1, out);
 
     log_d("Out: ");
     PrintVec(out);
@@ -417,10 +413,10 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
 
     // K_1 = K
     XTransform(m, K, &r1);
-    STransform(&r1, &r2);
+    // STransform(&r1, &r2);
     // PTransform(&r2, &r1);
     // LTransform(&r1, &new_m);
-    PLTransform(&r2, &new_m);
+    PLTransform(&r1, &new_m);
 
     prev_K = *K;
 
@@ -429,10 +425,10 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     {
         K_i(i, &prev_K, &prev_K);
         XTransform(&new_m, &prev_K, &r1);
-        STransform(&r1, &r2);
+        // STransform(&r1, &r2);
         // PTransform(&r2, &r1);
         // LTransform(&r1, &new_m);
-        PLTransform(&r2, &new_m);
+        PLTransform(&r1, &new_m);
     }
 
     K_i(C_SIZE, &prev_K, &prev_K);
@@ -460,14 +456,14 @@ void G_N(const union Vec512 *h,
 
     Vec512_Xor(h, N, &r1);
 
-    STransform(&r1, &r2);
+    // STransform(&r1, &r2);
     // PTransform(&r2, &r1);
     // LTransform(&r1, &r2);
-    PLTransform(&r2, &r1);
+    PLTransform(&r1, &r2);
 
-    E(&r1, m, &r2);
-    Vec512_Xor(&r2, h, &r1);
-    Vec512_Xor(&r1, m, out);
+    E(&r2, m, &r1);
+    Vec512_Xor(&r1, h, &r2);
+    Vec512_Xor(&r2, m, out);
 
     log_d("Out: ");
     PrintVec(out);
@@ -516,8 +512,8 @@ void InitContext(struct GOST34112018_Context *ctx,
  */
 static
 void Stage3(struct GOST34112018_Context *ctx,
-            const  GostU8              *message,
-            const  GostU64              size)
+            const  GostU8               *message,
+            const  GostU64               size)
 {
     union Vec512  r1;
     union Vec512  m       = ZERO_VECTOR_512;
