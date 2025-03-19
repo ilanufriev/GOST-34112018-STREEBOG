@@ -1,8 +1,5 @@
-/// @copyright Anufriev Ilia, anufriewwi@rambler.ru. All rights reserved.
-
-/**
-    DISCLAIMER
- */
+// Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+// SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
 #include "gost34112018.h"
 #include "gost34112018_optimized_private.h"
@@ -12,14 +9,14 @@
 #define MAX_UINT64 0xFFFFFFFFFFFFFFFF
 
 /**
-    @brief     This function computes a lookup table for L (ch. 5.3) and S (ch. 5.2) 
+    @brief     This function computes a lookup table for L (ch. 5.3) and S (ch. 5.2)
                transformations combined. It is not used in the computation itself, rather
                it can be used to produce an array of numbers that can later be pasted into
-               source code (as it is in this project, see file 
+               source code (as it is in this project, see file
                'gost34112018_optimized_precomp.h')
-    @note      Where 'i' is a sequence number of the byte in 64-bit number NUM 
-               (i = 0 is LSB) 'j' is a value of the byte NUM[i]. To compute LP transform, 
-               one would for each i-th number in NUM find TABLE[i][NUM[i]] and XOR it 
+    @note      Where 'i' is a sequence number of the byte in 64-bit number NUM
+               (i = 0 is LSB) 'j' is a value of the byte NUM[i]. To compute LP transform,
+               one would for each i-th number in NUM find TABLE[i][NUM[i]] and XOR it
                with an accumulator value
  */
 void LINEAR_TRANSFORM_TABLE(const GostU64 *A, const GostU64 A_size,
@@ -48,7 +45,7 @@ void PRECOMPUTE_TRANSFORM_TABLE(unsigned long long **out)
 {
     GostU64 **table = out;
 
-    LINEAR_TRANSFORM_TABLE(A, 64, P, 256, table);
+    LINEAR_TRANSFORM_TABLE(A, 64, PI, 256, table);
 
     for (int i = 0; i < 8; i++)
     {
@@ -72,7 +69,7 @@ void PRECOMPUTE_TRANSFORM_TABLE(unsigned long long **out)
 }
 
 /**
-    @brief      Initialization vector for the 256-bit long digest, as defined in ch. 5.1 
+    @brief      Initialization vector for the 256-bit long digest, as defined in ch. 5.1
                 of The Standard.
 */
 const union Vec512 INIT_VECTOR_256 = {
@@ -254,7 +251,7 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
 
     for (int i = 0; i < VEC512_BYTES; i++)
     {
-        out->bytes[i] = a->bytes[t[i]];
+        out->bytes[i] = a->bytes[TAU[i]];
     }
 
     log_d("Out: ");
@@ -280,7 +277,7 @@ void SLCombinedTransform(const union Vec512 *a, union Vec512 *out)
         for (GostU64 j = 0; j < sizeof(GostU64); j++)
         {
             GostU64 byte = ((a->qwords[i]) >> (j * 8)) & 0xFF;
-            c ^= PL_transform_precomp[j][byte];
+            c ^= SL_transform_precomp[j][byte];
         }
 
         out->qwords[i] = c;
@@ -473,7 +470,7 @@ void Stage3(struct GOST34112018_Context *ctx,
 
 /**
     @brief      Stage 2 of the hashing algorithm, as defined in the ch. 8.2 of
-                The Standard.          
+                The Standard.
     @param      ctx - current context of the algorithm.
     @param      message - message of size more than 512 bits (or 64 bytes).
     @param      size - size of the message in bytes.

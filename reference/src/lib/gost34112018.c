@@ -1,11 +1,15 @@
-/// @file gost34112018.c
-/// @copyright Anufriev Ilia, anufriewwi@rambler.ru. All rights reserved.
+// Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+// SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
 #include "gost34112018.h"
 #include "gost34112018_private.h"
 
 #define MAX_UINT64 0xFFFFFFFFFFFFFFFF
 
+/**
+    @brief      Initialization vector for the 256-bit long digest, as defined in ch. 5.1
+                of The Standard.
+*/
 const union Vec512 INIT_VECTOR_256 = {
     .qwords = {
         [0] = 0x0101010101010101,
@@ -19,6 +23,11 @@ const union Vec512 INIT_VECTOR_256 = {
     }
 };
 
+
+/**
+    @brief      Initialization vector for the 512-bit long digest, as defined in ch. 5.1
+                of The Standard.
+*/
 const union Vec512 INIT_VECTOR_512 = {
     .qwords = {
         [0] = 0x0000000000000000,
@@ -58,6 +67,11 @@ const union Vec512 VECTOR_512 = {
     },
 };
 
+/**
+    @brief      Changes endianness of the uint64.
+    @param      x - unsigned 64-bit value to be reversed.
+    @return     reversed unsigned 64-bit value.
+ */
 static inline GostU64 Uint64_ReverseByteOrder(const GostU64 x)
 {
     GostU64 result = 0;
@@ -96,6 +110,13 @@ static inline void PrintVec(const union Vec512 *out)
 }
 #endif // DEBUG
 
+/**
+    @brief      Vec512 addition operation.
+    @param      in1 - first operand.
+    @param      in2 - second operand.
+    @param      out - output pointer.
+ */
+static
 void Vec512_Add(const union Vec512 *in1,
                 const union Vec512 *in2,
                       union Vec512 *out)
@@ -131,6 +152,13 @@ void Vec512_Add(const union Vec512 *in1,
     PrintVec(out);
 }
 
+/**
+    @brief      Vec512 XOR operation.
+    @param      in1 - first operand.
+    @param      in2 - second operand.
+    @param      out - output pointer.
+ */
+static
 void Vec512_Xor(const union Vec512 *in1,
                 const union Vec512 *in2,
                       union Vec512 *out)
@@ -150,6 +178,12 @@ void Vec512_Xor(const union Vec512 *in1,
     PrintVec(out);
 }
 
+/**
+    @brief       Uint64 to Vec512 conversion function.
+    @param       x - conversion operand.
+    @param       out - output pointer.
+ */
+static
 void Uint64ToVec512(const GostU64 x, union Vec512 *out)
 {
     out->qwords[7] = Uint64_ReverseByteOrder(x);
@@ -162,6 +196,13 @@ void Uint64ToVec512(const GostU64 x, union Vec512 *out)
     out->qwords[0] = 0;
 }
 
+/**
+    @brief       X transformation of the algorithm as defined in the ch. 6 of the Standard.
+    @param       a - argument 'a', according to the standard.
+    @param       k - argument 'k', according to the standard.
+    @param       out - output pointer.
+ */
+static
 void XTransform(const union Vec512 *a, const union Vec512 *k, union Vec512 *out)
 {
     log_d("X transformation:");
@@ -176,6 +217,12 @@ void XTransform(const union Vec512 *a, const union Vec512 *k, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+    @brief      S transformtaion of the algorithm as defined in the ch. 6 of the Standard.
+    @param      a - argument 'a', according to The Standard.
+    @param      out - output pointer.
+ */
+static
 void STransform(const union Vec512 *a, union Vec512 *out)
 {
     log_d("S transformation:");
@@ -184,13 +231,19 @@ void STransform(const union Vec512 *a, union Vec512 *out)
 
     for (int i = 0; i < VEC512_BYTES; i++)
     {
-        out->bytes[i] = P[a->bytes[i]];
+        out->bytes[i] = PI[a->bytes[i]];
     }
 
     log_d("Out: ");
     PrintVec(out);
 }
 
+/**
+    @brief      P transformation of the algorithm as defined in the ch. 6 of the Standard.
+    @param      a - argument 'a', according to The Standard.
+    @param      out - output pointer.
+ */
+static
 void PTransform(const union Vec512 *a, union Vec512 *out)
 {
     log_d("P transformation:");
@@ -199,13 +252,19 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
 
     for (int i = 0; i < VEC512_BYTES; i++)
     {
-        out->bytes[i] = a->bytes[t[i]];
+        out->bytes[i] = a->bytes[TAU[i]];
     }
 
     log_d("Out: ");
     PrintVec(out);
 }
 
+/**
+    @brief      L transformation of the algorithm as defined in the ch. 6 of the Standard.
+    @param      a - argument 'a', according to The Standard.
+    @param      out - output pointer.
+ */
+static
 void LTransform(const union Vec512 *a, union Vec512 *out)
 {
     log_d("L transformation:");
@@ -238,6 +297,14 @@ void LTransform(const union Vec512 *a, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+    @brief      Computation of iteration values for encryption function, as defined in
+                ch. 7 of The Standard.
+    @param      i - index of the iteration value.
+    @param      K[i - 1]th iteration value.
+    @param      out - output pointer.
+ */
+static
 void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
 {
     union Vec512 r1, r2;
@@ -261,6 +328,14 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+    @brief      Encryption function E(K, m), which is an integral part of the compression
+                function, as defined in ch. 7 of The Standard.
+    @param      K - iteration values initial vector, according to The Standard.
+    @param      m - an argument 'm', according to The Standard.
+    @param      out - output pointer.
+ */
+static
 void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
 {
     union Vec512 r1, r2, new_m, prev_K;
@@ -300,6 +375,14 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     PrintVec(out);
 }
 
+/**
+    @brief      Compression function G_N(h, m), as defined in ch. 7 of The Standard.
+    @param      m - parameter 'm', accroding to The Standard.
+    @param      h - parameter 'h', according to The Standard.
+    @param      N - parameter 'N', according to The Standard.
+    @param      out - output pointer.
+ */
+static
 void G_N(const union Vec512 *h,
          const union Vec512 *m,
          const union Vec512 *N,
@@ -329,6 +412,16 @@ void G_N(const union Vec512 *h,
     PrintVec(out);
 }
 
+/**
+    @brief       This function takes message in natural ("as is") byte order,
+                 and takes a 512-bit long part from it, starting from the end of
+                 the message. While splitting, it also reverses the 512-bit block into
+                 little endian-byte order.
+    @param       message - message to sliced into 512-bit blocks.
+    @param       size - size of the message.
+    @param       out - a output pointer.
+ */
+static
 void SplitMessage512(const GostU8 *message,
                      const GostU64 size,
                      union Vec512  *out)
@@ -339,6 +432,13 @@ void SplitMessage512(const GostU8 *message,
     }
 }
 
+/**
+    @brief       Initialize GOST34112018 context. This should be done
+                 before any computations take place, according to ch. 8.1 of The Standard.
+    @param       ctx - input pointer, context to be initialized.
+    @param       init_vector - initialization vector for context.
+ */
+static
 void InitContext(struct GOST34112018_Context *ctx,
                  const union  Vec512         *init_vector)
 {
@@ -347,6 +447,13 @@ void InitContext(struct GOST34112018_Context *ctx,
     ctx->sigma = ZERO_VECTOR_512;
 }
 
+/**
+    @brief       Stage 3 of the hashing algorithm, as defined in the ch. 8.3.
+    @param       ctx - current context of the algorithm.
+    @param       message - message of size less than 512 bits.
+    @param       size - size of the message.
+ */
+static
 void Stage3(struct GOST34112018_Context *ctx,
             const  GostU8              *message,
             const  GostU64              size)
@@ -375,6 +482,14 @@ void Stage3(struct GOST34112018_Context *ctx,
     G_N(h, sigma, &ZERO_VECTOR_512, h);
 }
 
+/**
+    @brief      Stage 2 of the hashing algorithm, as defined in the ch. 8.2 of
+                The Standard.
+    @param      ctx - current context of the algorithm.
+    @param      message - message of size more than 512 bits (or 64 bytes).
+    @param      size - size of the message in bytes.
+ */
+static
 void Stage2(struct GOST34112018_Context *ctx,
             const  GostU8               *message,
             const  GostU64               size)
@@ -407,6 +522,13 @@ void Stage2(struct GOST34112018_Context *ctx,
     Stage3(ctx, message, current_size);
 }
 
+/**
+    @brief       Start the hashing algorithm
+    @param       ctx - current context of the algorithm.
+    @param       message - message to be hashed.
+    @param       size - size of the message.
+ */
+static
 void Start(struct GOST34112018_Context   *ctx,
            const  GostU8                 *message,
            const  GostU64                 size)

@@ -1,3 +1,6 @@
+// Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+// SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
+
 #include "gost34112018.h"
 #include "stdio.h"
 #include "assert.h"
@@ -20,8 +23,8 @@ void PrintBytes(const unsigned char *bytes, const unsigned long long size)
     printf("\n");
 }
 
-void print_lookup_table(const unsigned long long **table, 
-                        const unsigned long long   width, 
+void print_lookup_table(const unsigned long long **table,
+                        const unsigned long long   width,
                         const unsigned long long   height)
 {
     for (unsigned long long i = 0; i < height; i++)

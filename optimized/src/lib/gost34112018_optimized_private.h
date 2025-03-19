@@ -1,4 +1,5 @@
-/// @copyright Anufriev Ilia, anufriewwi@rambler.ru. All rights reserved.
+// Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+// SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
 #ifndef __GOST34112018_OPTIMIZED_PRIVATE_H__
 #define __GOST34112018_OPTIMIZED_PRIVATE_H__
@@ -41,7 +42,7 @@ typedef char                 GostI8;
 typedef enum { false, true } GostBool;
 
 /**
- * @brief       Little-endian unsigned 512-bit number.
+    @brief       Little-endian unsigned 512-bit number.
  */
 union Vec512
 {
@@ -54,6 +55,9 @@ union Vec512
 extern const union Vec512 INIT_VECTOR_256;
 extern const union Vec512 INIT_VECTOR_512;
 
+/**
+    @brief      Context of the algorithm, as described in ch. 8.1 of the Standard.
+ */
 struct GOST34112018_Context
 {
     union Vec512 h;
@@ -61,7 +65,11 @@ struct GOST34112018_Context
     union Vec512 sigma;
 };
 
-GostU8 P[256] = {
+/**
+    @brief      S-box, as defined in the chapter 5.1 of The Standard. It is used for
+                S-transformation.
+ */
+GostU8 PI[256] = {
     252, 238, 221,  17, 207, 110,  49,  22,
     251, 196, 250, 218,  35, 197,   4,  77,
     233, 119, 240, 219, 147,  46, 153, 186,
@@ -96,7 +104,11 @@ GostU8 P[256] = {
     209, 102, 175, 194,  57,  75,  99, 182
 };
 
-GostU8 t[64] = {
+/**
+    @brief      A byte shuffle table, as defined in the ch. 5.3 of The Standard. It is
+                used for the P transformation.
+ */
+GostU8 TAU[64] = {
     0,  8, 16, 24, 32, 40, 48, 56,
     1,  9, 17, 25, 33, 41, 49, 57,
     2, 10, 18, 26, 34, 42, 50, 58,
@@ -113,6 +125,10 @@ enum
     C_SIZE = 12,
 };
 
+/**
+    @brief      Matrix A, as defined in the ch. 5.4 of The Standard. It is used for the L
+                transformation.
+ */
 GostU64 A[64] = {
     0x8e20faa72ba0b470, 0x47107ddd9b505a38, 0xad08b0e0c3282d1c, 0xd8045870ef14980e,
     0x6c022c38f90a4c07, 0x3601161cf205268d, 0x1b8e0b0e798c13c8, 0x83478b07b2468764,
@@ -131,8 +147,6 @@ GostU64 A[64] = {
     0x70a6a56e2440598e, 0x3853dc371220a247, 0x1ca76e95091051ad, 0x0edd37c48a08a6d8,
     0x07e095624504536c, 0x8d70c431ac02a736, 0xc83862965601dd1b, 0x641c314b2b8ee083
 };
-
-/* Constants are provided in Little-Endian order */
 
 union Vec512 C1 = {
     .bytes = {
@@ -291,6 +305,12 @@ union Vec512 C12 = {
     }
 };
 
+/**
+    @brief      Iteration constants, that are used in the encryption function of the
+                algorithm.
+    @note       All constants are Little-Endian unsigned 512-bit numbers, which means that,
+                for example, C1.bytes[0] is LSB and C1.bytes[63] is MSB.
+ */
 union Vec512 *C[] = { &C1, &C2, &C3,  &C4,  &C5,  &C6,
                       &C7, &C8, &C9, &C10, &C11, &C12 };
 
