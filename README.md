@@ -4,7 +4,9 @@ Yet another implementation of GOST-34.11-2018 (unofficially called "STREEBOG") -
 
 ## Justification
 
-There are a lot of different implementation of this algorithm out there. Main justification for creation of this project was its educational value. I learned a lot about cryptography as a whole and this algorithm in particular while working on it.
+*There are a lot of different implementations of this algorithm out there. Why making another one?*
+
+The main justification for creation of this project was its educational value. I learned a lot about cryptography as a whole and this algorithm in particular while working on it.
 
 ## Implementations
 
