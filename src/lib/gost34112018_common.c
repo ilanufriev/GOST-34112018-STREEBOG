@@ -1,75 +1,9 @@
 // Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
 // SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
-#ifndef __GOST34112018_OPTIMIZED_PRIVATE_H__
-#define __GOST34112018_OPTIMIZED_PRIVATE_H__
+#include "gost34112018_common.h"
 
-#ifdef DEBUG
-    #include "stdio.h"
-    #define log_d(__fmt, ...) \
-        printf("GOST34112018 [DEBUG] %s: " __fmt "\n", __func__,##__VA_ARGS__)
-#else
-    #define log_d(__fmd, ...) ;
-#endif // DEBUG
-
-enum GOST_34112018_CONSTANTS
-{
-    BYTE_SIZE     = (1 * 8), // bits in byte
-    WORD_SIZE     = (2 * 8), // bits in word (16-bit integer)
-    DWORD_SIZE    = (4 * 8), // bits in double-word (32-bit integer)
-    QWORD_SIZE    = (8 * 8), // bits in quad-word (64-bit integer)
-
-    VEC512_BYTES  = 512 / BYTE_SIZE,
-    VEC512_WORDS  = 512 / WORD_SIZE,
-    VEC512_DWORDS = 512 / DWORD_SIZE,
-    VEC512_QWORDS = 512 / QWORD_SIZE,
-
-    VEC512_SIZE   = VEC512_BYTES,
-
-    BLOCK_SIZE    = 512 / BYTE_SIZE,
-};
-
-typedef unsigned long long   GostU64;
-typedef unsigned int         GostU32;
-typedef unsigned short       GostU16;
-typedef unsigned char        GostU8;
-
-typedef long long            GostI64;
-typedef int                  GostI32;
-typedef short                GostI16;
-typedef char                 GostI8;
-
-typedef enum { false, true } GostBool;
-
-/**
-    @brief       Little-endian unsigned 512-bit number.
- */
-union Vec512
-{
-    GostU8  bytes  [VEC512_BYTES];
-    GostU16 words  [VEC512_WORDS];
-    GostU32 dwords [VEC512_DWORDS];
-    GostU64 qwords [VEC512_QWORDS];
-};
-
-extern const union Vec512 INIT_VECTOR_256;
-extern const union Vec512 INIT_VECTOR_512;
-
-/**
-    @brief      Context of the algorithm, as described in ch. 8.1 of the Standard.
- */
-struct GOST34112018_Context
-{
-    union Vec512 h;
-    union Vec512 N;
-    union Vec512 sigma;
-};
-
-/**
-    @brief      S-box, as defined in the chapter 5.1 of The Standard. It is used for
-                S-transformation.
- */
-GostU8 PI[256] = {
+const GostU8 PI[256] = {
     252, 238, 221,  17, 207, 110,  49,  22,
     251, 196, 250, 218,  35, 197,   4,  77,
     233, 119, 240, 219, 147,  46, 153, 186,
@@ -104,11 +38,7 @@ GostU8 PI[256] = {
     209, 102, 175, 194,  57,  75,  99, 182
 };
 
-/**
-    @brief      A byte shuffle table, as defined in the ch. 5.3 of The Standard. It is
-                used for the P transformation.
- */
-GostU8 TAU[64] = {
+const GostU8 TAU[64] = {
     0,  8, 16, 24, 32, 40, 48, 56,
     1,  9, 17, 25, 33, 41, 49, 57,
     2, 10, 18, 26, 34, 42, 50, 58,
@@ -119,17 +49,7 @@ GostU8 TAU[64] = {
     7, 15, 23, 31, 39, 47, 55, 63
 };
 
-enum
-{
-    A_SIZE = 64,
-    C_SIZE = 12,
-};
-
-/**
-    @brief      Matrix A, as defined in the ch. 5.4 of The Standard. It is used for the L
-                transformation.
- */
-GostU64 A[64] = {
+const GostU64 A[64] = {
     0x8e20faa72ba0b470, 0x47107ddd9b505a38, 0xad08b0e0c3282d1c, 0xd8045870ef14980e,
     0x6c022c38f90a4c07, 0x3601161cf205268d, 0x1b8e0b0e798c13c8, 0x83478b07b2468764,
     0xa011d380818e8f40, 0x5086e740ce47c920, 0x2843fd2067adea10, 0x14aff010bdd87508,
@@ -148,7 +68,7 @@ GostU64 A[64] = {
     0x07e095624504536c, 0x8d70c431ac02a736, 0xc83862965601dd1b, 0x641c314b2b8ee083
 };
 
-union Vec512 C1 = {
+const union Vec512 C1 = {
     .bytes = {
         0x07, 0x45, 0xa6, 0xf2, 0x59, 0x65, 0x80, 0xdd,
         0x23, 0x4d, 0x74, 0xcc, 0x36, 0x74, 0x76, 0x05,
@@ -174,7 +94,7 @@ union Vec512 C2 = {
     }
 };
 
-union Vec512 C3 = {
+const union Vec512 C3 = {
     .bytes = {
         0xb2, 0x0a, 0xba, 0x0a, 0xf5, 0x96, 0x1e, 0x99,
         0x31, 0xdb, 0x7a, 0x86, 0x43, 0xf4, 0xb6, 0xc2,
@@ -187,7 +107,7 @@ union Vec512 C3 = {
     }
 };
 
-union Vec512 C4 = {
+const union Vec512 C4 = {
     .bytes = {
         0x2e, 0xd1, 0xe3, 0x84, 0xbc, 0xbe, 0x0c, 0x22,
         0xf1, 0x37, 0xe8, 0x93, 0xa1, 0xea, 0x53, 0x34,
@@ -201,7 +121,7 @@ union Vec512 C4 = {
 };
 
 
-union Vec512 C5 = {
+const union Vec512 C5 = {
     .bytes = {
         0x57, 0xfe, 0x6c, 0x7c, 0xfd, 0x58, 0x17, 0x60,
         0xf5, 0x63, 0xea, 0xa9, 0x7e, 0xa2, 0x56, 0x7a,
@@ -214,7 +134,7 @@ union Vec512 C5 = {
     }
 };
 
-union Vec512 C6 = {
+const union Vec512 C6 = {
     .bytes = {
         0x6e, 0x7d, 0x64, 0x46, 0x7a, 0x40, 0x68, 0xfa,
         0x35, 0x4f, 0x90, 0x36, 0x72, 0xc5, 0x71, 0xbf,
@@ -227,7 +147,7 @@ union Vec512 C6 = {
     }
 };
 
-union Vec512 C7 = {
+const union Vec512 C7 = {
     .bytes = {
         0x93, 0xd4, 0x14, 0x3a, 0x4d, 0x56, 0x86, 0x88,
         0xf3, 0x4a, 0x3c, 0xa2, 0x4c, 0x45, 0x17, 0x35,
@@ -240,7 +160,7 @@ union Vec512 C7 = {
     }
 };
 
-union Vec512 C8 = {
+const union Vec512 C8 = {
     .bytes = {
         0x1e, 0xe7, 0x02, 0xbf, 0xd4, 0x0d, 0x7f, 0xa4,
         0xd9, 0xa8, 0x51, 0x59, 0x35, 0xc2, 0xac, 0x36,
@@ -253,7 +173,7 @@ union Vec512 C8 = {
     }
 };
 
-union Vec512 C9 = {
+const union Vec512 C9 = {
     .bytes = {
         0xdb, 0x5a, 0x23, 0x83, 0x51, 0x44, 0x61, 0x72,
         0x60, 0x2a, 0x1f, 0xcb, 0x92, 0xdc, 0x38, 0x0e,
@@ -266,7 +186,7 @@ union Vec512 C9 = {
     }
 };
 
-union Vec512 C10 = {
+const union Vec512 C10 = {
     .bytes = {
         0xed, 0x9c, 0x45, 0x98, 0xfb, 0xc7, 0xb4, 0x74,
         0xc3, 0xb6, 0x3b, 0x15, 0xd1, 0xfa, 0x98, 0x36,
@@ -279,7 +199,7 @@ union Vec512 C10 = {
     }
 };
 
-union Vec512 C11 = {
+const union Vec512 C11 = {
     .bytes = {
         0x1b, 0x2d, 0xf3, 0x81, 0xcd, 0xa4, 0xca, 0x6b,
         0x5d, 0xd8, 0x6f, 0xc0, 0x4a, 0x59, 0xa2, 0xde,
@@ -292,7 +212,7 @@ union Vec512 C11 = {
     }
 };
 
-union Vec512 C12 = {
+const union Vec512 C12 = {
     .bytes = {
         0x20, 0xd7, 0x1b, 0xf1, 0x4a, 0x92, 0xbc, 0x48,
         0x99, 0x1b, 0xb2, 0xd9, 0xd5, 0x17, 0xf4, 0xfa,
@@ -305,13 +225,44 @@ union Vec512 C12 = {
     }
 };
 
-/**
-    @brief      Iteration constants, that are used in the encryption function of the
-                algorithm.
-    @note       All constants are Little-Endian unsigned 512-bit numbers, which means that,
-                for example, C1.bytes[0] is LSB and C1.bytes[63] is MSB.
- */
-union Vec512 *C[] = { &C1, &C2, &C3,  &C4,  &C5,  &C6,
-                      &C7, &C8, &C9, &C10, &C11, &C12 };
+const union Vec512 *C[] = { &C1, &C2, &C3,  &C4,  &C5,  &C6,
+                            &C7, &C8, &C9, &C10, &C11, &C12 };
 
-#endif // __GOST34112018_OPTIMIZED_PRIVATE_H__
+const union Vec512 INIT_VECTOR_256 = {
+    .qwords = {
+        [0] = 0x0101010101010101,
+        [1] = 0x0101010101010101,
+        [2] = 0x0101010101010101,
+        [3] = 0x0101010101010101,
+        [4] = 0x0101010101010101,
+        [5] = 0x0101010101010101,
+        [6] = 0x0101010101010101,
+        [7] = 0x0101010101010101,
+    }
+};
+
+const union Vec512 INIT_VECTOR_512 = {
+    .qwords = {
+        [0] = 0x0000000000000000,
+        [1] = 0x0000000000000000,
+        [2] = 0x0000000000000000,
+        [3] = 0x0000000000000000,
+        [4] = 0x0000000000000000,
+        [5] = 0x0000000000000000,
+        [6] = 0x0000000000000000,
+        [7] = 0x0000000000000000,
+    }
+};
+
+const union Vec512 ZERO_VECTOR_512 = {
+   .qwords = {
+        [0] = 0x0000000000000000,
+        [1] = 0x0000000000000000,
+        [2] = 0x0000000000000000,
+        [3] = 0x0000000000000000,
+        [4] = 0x0000000000000000,
+        [5] = 0x0000000000000000,
+        [6] = 0x0000000000000000,
+        [7] = 0x0000000000000000,
+    }
+};

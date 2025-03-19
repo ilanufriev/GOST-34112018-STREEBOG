@@ -4,7 +4,7 @@
 #ifndef __GOST34112018_OPTIMIZED_PRECOMP_H__
 #define __GOST34112018_OPTIMIZED_PRECOMP_H__
 
-#include "gost34112018_optimized_private.h"
+#include "gost34112018_common.h"
 
 /**
     @brief      This array contains a lookup-table of precomputed unsigned 64-bit values,

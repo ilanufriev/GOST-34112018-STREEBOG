@@ -22,9 +22,7 @@ typedef enum {
 */
 void GOST34112018_Hash(const unsigned char          *message,
                        const unsigned long long      message_size,
-                       unsigned char                *hash_out,
-                       const GOST34112018_HashSize_t hash_size);
-
-void Test();
+                       const GOST34112018_HashSize_t hash_size,
+                       unsigned char                *hash_out);
 
 #endif // __GOST34112018_H__
