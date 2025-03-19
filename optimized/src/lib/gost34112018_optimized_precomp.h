@@ -1,11 +1,16 @@
-/// @copyright Anufriev Ilia, anufriewwi@rambler.ru. All rights reserved.
+// Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+// SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
 #ifndef __GOST34112018_OPTIMIZED_PRECOMP_H__
 #define __GOST34112018_OPTIMIZED_PRECOMP_H__
 
 #include "gost34112018_optimized_private.h"
 
-const GostU64 L_transform_precomp[8][256] = {
+/**
+    @brief      This array contains a lookup-table of precomputed unsigned 64-bit values,
+                that are used to accelerate S + L combined transformation.
+ */
+const GostU64 SL_transform_precomp[8][256] = {
     {
         0xd01f715b5c7ef8e6, 0x16fa240980778325, 0xa8a42e857ee049c8, 0x6ac1068fa186465b,
         0x6e417bd7a2e9320b, 0x665c8167a437daab, 0x7666681aa89617f6, 0x4b959163700bdcf5,

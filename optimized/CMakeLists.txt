@@ -1,3 +1,6 @@
+# Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+# SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
+
 cmake_minimum_required(VERSION 3.20)
 
 project(libgost34112018 VERSION 0.1.0)

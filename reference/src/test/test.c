@@ -1,3 +1,6 @@
+// Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
+// SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
+
 #include "gost34112018.h"
 #include "stdio.h"
 #include "assert.h"
