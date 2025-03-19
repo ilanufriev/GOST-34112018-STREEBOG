@@ -1,3 +1,6 @@
+libgost34112018 - an implementation of the GOST 34.11-2018 Russian Hashing algorithm.
+Copyright (C) 2025, Anufriev Ilia, anufriewwi@rambler.ru
+
                            GNU GENERAL PUBLIC LICENSE
                             Version 3, 29 June 2007
           Copyright © 2007 Free Software Foundation, Inc. <https://fsf.org/>
