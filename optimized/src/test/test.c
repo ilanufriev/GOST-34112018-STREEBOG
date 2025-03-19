@@ -20,6 +20,31 @@ void PrintBytes(const unsigned char *bytes, const unsigned long long size)
     printf("\n");
 }
 
+void print_lookup_table(const unsigned long long **table, 
+                        const unsigned long long   width, 
+                        const unsigned long long   height)
+{
+    for (unsigned long long i = 0; i < height; i++)
+    {
+        printf("{\n");
+        for (unsigned long long j = 0; j < width; j++)
+        {
+            if (j % 4 == 0 && j != 0)
+            {
+                printf("\n    ");
+            }
+
+            if (j == 0)
+            {
+                printf("    ");
+            }
+            printf("0x%016llx, ", table[i][j]);
+        }
+        printf("\n},");
+        putc('\n', stdout);
+    }
+}
+
 bool BytesEqual(const unsigned char *lhs,
                 const unsigned char *rhs,
                 const unsigned long long size)
@@ -59,7 +84,7 @@ void Test(void)
 	};
 
     unsigned char hash512[64];
-    GOST34112018_Hash(message, 63, hash512, GOST34112018_Hash512);
+    GOST34112018_Hash(message, 63, GOST34112018_Hash512, hash512);
 
     log_d("Got 512-bit hash!");
     PrintBytes(hash512, GOST34112018_Hash512);
@@ -69,7 +94,7 @@ void Test(void)
 
     unsigned char hash256[64];
 
-    GOST34112018_Hash(message, 63, hash256, GOST34112018_Hash256);
+    GOST34112018_Hash(message, 63, GOST34112018_Hash256, hash256);
 
     log_d("Got 256-bit hash!");
     PrintBytes(hash256, GOST34112018_Hash256);
@@ -114,13 +139,13 @@ void Test2(void)
 
     unsigned char hash256[32];
 
-    GOST34112018_Hash(message, 72, hash512, GOST34112018_Hash512);
+    GOST34112018_Hash(message, 72, GOST34112018_Hash512, hash512);
 
     PrintBytes(hash512, 64);
     assert(BytesEqual(expected_hash512, hash512, GOST34112018_Hash512));
     log_d("Hash512 OK!");
 
-    GOST34112018_Hash(message, 72, hash256, GOST34112018_Hash256);
+    GOST34112018_Hash(message, 72, GOST34112018_Hash256, hash256);
 
     PrintBytes(hash256, 32);
     assert(BytesEqual(expected_hash256, hash256, GOST34112018_Hash256));
@@ -143,7 +168,7 @@ void Test3(void)
     unsigned char hash512[64];
     // unsigned char hash256[32];
 
-    GOST34112018_Hash(message, 64, hash512, GOST34112018_Hash512);
+    GOST34112018_Hash(message, 64, GOST34112018_Hash512, hash512);
 
     log_d("HASH 512 FOR 512-bit WIDE MESSAGE:");
     PrintBytes(hash512, GOST34112018_Hash512);
