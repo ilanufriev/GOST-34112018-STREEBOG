@@ -185,12 +185,10 @@ void GOST34112018_HashBlock(const unsigned char          *data_block,
 {
     if (data_block_size < BLOCK_SIZE)
     {
-        log_d("Doing a Stage3 single-cycle");
         Stage3((struct GOST34112018_Internal *) ctx, data_block, data_block_size);
     }
     else if (data_block_size == BLOCK_SIZE)
     {
-        log_d("Doing a Stage2 single-cycle");
         Stage2_SingleCycle((struct GOST34112018_Internal *) ctx, data_block);
     }
 
@@ -210,9 +208,10 @@ public_api
 void GOST34112018_GetHashFromContext(const struct GOST34112018_Context *ctx,
                                      unsigned char *out)
 {
+    int step = ctx->hash_size == GOST34112018_Hash512 ? 0 : 32;
     for (GostU32 i = 0; i < ctx->hash_size; i++)
     {
-        out[i] = ctx->h[i];
+        out[i] = ctx->h[i + step];
     }
 }
 

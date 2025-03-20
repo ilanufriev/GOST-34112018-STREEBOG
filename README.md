@@ -4,7 +4,7 @@ Yet another implementation of GOST-34.11-2018 (unofficially called "STREEBOG") -
 
 ## Justification
 
-*There are a lot of different implementations of this algorithm out there. Why making another one?*
+*There are a lot of different implementations of this algorithm out there. Why make another one?*
 
 The main justification for creation of this project was its educational value. I learned a lot about cryptography as a whole and this algorithm in particular while working on it.
 
@@ -12,9 +12,9 @@ The main justification for creation of this project was its educational value. I
 
 There are different implementations of the function. For now there are two:
 
-* Reference implementation (path: src/lib/reference, -DLIBGOST34112018=REFERENCE flag CMake) - a reference implementation which follows The Standard as closely as possible. It is very for educational purposes. It is recommended to study this version first, and then moving on to the optimized implementation. It is also recommended for one to have read The Standard _before_ reading the code.
+* **Reference implementation** (path: src/lib/reference, -DLIBGOST34112018=REFERENCE flag CMake) - a reference implementation which follows The Standard as closely as possible. It is very for educational purposes. It is recommended to study this version first, and then moving on to the optimized implementation. It is also recommended for one to have read The Standard _before_ reading the code.
 
-* Optimized implementation (path: src/lib/optimized, -DLIBGOST34112018=OPTIMIZED flag CMake) - a more optimized implementation that uses lookup-tables to accelerate some computations.
+* **Optimized implementation** (path: src/lib/optimized, -DLIBGOST34112018=OPTIMIZED flag CMake) - a more optimized implementation that uses lookup-tables to accelerate some computations.
 
 ## Building
 ### Dependencies
@@ -41,7 +41,30 @@ Since The Standard contains primarily mathematical foundations of the algorithm,
 
 ## Examples
 
-To see how to use this library (there is only one function you need to know, really), look no further than src/test/test.c file. It contains tests which serve as examples of using this library.
+To see how to use this library look into src/util/gost34112018_cli.c, which serves as an example of using the library API.
+
+## Command-line tool
+
+**gost34112018_cli** is a simple command-line tool that allows to compute GOST 34.11-2018 hashsum on the fly:
+
+```
+$ ./gost34112018_cli --help
+Usage: gost34112018_cli [OPTION...] [ARGS...]
+My program description.
+
+  -b, --big-endian           Print hash in big endian format (by default hash
+                             is printed in little endian format).
+  -n, --no-newline           Print hash with no newline character at the end.
+  -s, --hash-size=HASH_SIZE  Size of the hash (256 or 512). 512 by default.
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+
+$ cat message1.bin | ./gost34112018_cli -s 512 -b
+486f64c1917879417fef082b3381a4e211c324f074654c38823a7b76f830ad00fa1fbae42b1285c0352f227524bc9ab16254288dd6863dccd5b9f54a1ad0541b
+
+$ cat message1.bin | ./gost34112018_cli -s 256 -b
+00557be5e584fd52a449b16b0251d05d27f94ab76cbaa6da890b59d8ef1e159d
+```
 
 ## License
 

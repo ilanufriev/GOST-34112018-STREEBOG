@@ -125,14 +125,12 @@ int main(int argc, char **argv)
             continue;
         }
 
-        log_debug("Read block of size %d", rc);
         GOST34112018_HashBlock(buffer, rc, &ctx);
         rc = 0;
     }
 
     if (rc != 0)
     {
-        log_debug("Read block of size %d", rc);
         GOST34112018_HashBlock(buffer, rc, &ctx);
     }
 
