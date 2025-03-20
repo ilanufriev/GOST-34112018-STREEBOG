@@ -10,7 +10,8 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(TARGET_TEST test_gost34112018)
-set(TARGET_LIB gost34112018)
+set(TARGET_LIB  gost34112018)
+set(TARGET_UTIL gost34112018_cli)
 
 set(TARGET_LIB_COMMON_FILES
         src/lib/gost34112018_vec512.c
@@ -30,6 +31,9 @@ endif()
 
 # for test purposes
 add_executable(${TARGET_TEST} src/test/test.c)
+
+# util for copmuting STREEBOG hash of various data from cli
+add_executable(${TARGET_UTIL} src/util/gost34112018_cli.c)
 
 if(LIBGOST34112018_TYPE STREQUAL "OPTIMIZED")
     message("Chosen OPTIMIZED implementation.")
@@ -60,7 +64,10 @@ else()
 endif()
 
 target_include_directories(${TARGET_TEST} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(${TARGET_UTIL} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
 target_link_libraries(${TARGET_TEST} PUBLIC ${TARGET_LIB})
+target_link_libraries(${TARGET_UTIL} PUBLIC ${TARGET_LIB})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Using debug compile options")
@@ -77,6 +84,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -fsanitize=undefined
         )
 
-    target_compile_definitions(${TARGET_LIB} PUBLIC DEBUG)
-    target_compile_definitions(${TARGET_TEST} PUBLIC DEBUG)
+        target_compile_definitions(${TARGET_LIB} PUBLIC DEBUG)
+        target_compile_definitions(${TARGET_TEST} PUBLIC DEBUG)
+        target_compile_definitions(${TARGET_UTIL} PUBLIC DEBUG)
 endif()

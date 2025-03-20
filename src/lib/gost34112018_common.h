@@ -15,9 +15,9 @@
 #include "gost34112018_vec512.h"
 
 /**
-    @brief      Context of the algorithm, as described in ch. 8.1 of the Standard.
+    @brief      Internal context of the algorithm, as described in ch. 8.1 of the Standard.
  */
-struct GOST34112018_Context
+struct GOST34112018_Internal
 {
     union Vec512 h;
     union Vec512 N;

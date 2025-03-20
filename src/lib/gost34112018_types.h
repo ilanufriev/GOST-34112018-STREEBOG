@@ -6,6 +6,8 @@
 
 #define MAX_GOSTU64 0xFFFFFFFFFFFFFFFF
 
+#define GostNull ((void *)0)
+
 enum GOST_34112018_CONSTANTS
 {
     BYTE_SIZE     = (1 * 8), // bits in byte
