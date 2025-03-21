@@ -12,12 +12,13 @@
     #define log_d(__fmd, ...) ;
 #endif // DEBUG
 
+#include "gost34112018.h"
 #include "gost34112018_vec512.h"
 
 /**
     @brief      Internal context of the algorithm, as described in ch. 8.1 of the Standard.
  */
-struct GOST34112018_Internal
+struct GOST34112018_AlignAttribute(32) GOST34112018_Internal
 {
     union Vec512 h;
     union Vec512 N;

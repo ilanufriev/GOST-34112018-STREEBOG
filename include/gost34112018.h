@@ -4,6 +4,13 @@
 #ifndef __GOST34112018_H__
 #define __GOST34112018_H__
 
+#if defined(__GNUC__) || defined(__clang__)
+    #define GOST34112018_AlignAttribute(__bytes) \
+        __attribute__((aligned(__bytes)))
+#else
+    #error "For now only gcc and clang are supported."
+#endif
+
 typedef enum {
     GOST34112018_Hash256 = 32,
     GOST34112018_Hash512 = 64,
@@ -11,8 +18,9 @@ typedef enum {
 
 /**
     @brief      Context of the algorithm, as described in ch. 8.1 of the Standard.
+                It has to be 32-byte aligned.
  */
-struct GOST34112018_Context
+struct GOST34112018_AlignAttribute(32) GOST34112018_Context
 {
     unsigned char           h    [64];
     unsigned char           N    [64];

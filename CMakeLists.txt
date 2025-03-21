@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(libgost34112018 VERSION 0.1.0)
+project(libgost34112018 VERSION 0.3.0)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
@@ -14,7 +14,6 @@ set(TARGET_LIB  gost34112018)
 set(TARGET_UTIL gost34112018_cli)
 
 set(TARGET_LIB_COMMON_FILES
-        src/lib/gost34112018_vec512.c
         src/lib/gost34112018_common.c
         src/lib/gost34112018.c
     )
@@ -40,6 +39,7 @@ if(LIBGOST34112018_TYPE STREQUAL "OPTIMIZED")
 
     add_library(${TARGET_LIB} SHARED
             ${TARGET_LIB_COMMON_FILES}
+            src/lib/gost34112018_vec512.c
             src/lib/optimized/gost34112018_optimized.c
         )
 
@@ -52,6 +52,7 @@ elseif(LIBGOST34112018_TYPE STREQUAL "REFERENCE")
 
     add_library(${TARGET_LIB} SHARED
             ${TARGET_LIB_COMMON_FILES}
+            src/lib/gost34112018_vec512.c
             src/lib/reference/gost34112018_ref.c
         )
 
@@ -59,6 +60,22 @@ elseif(LIBGOST34112018_TYPE STREQUAL "REFERENCE")
             ${TARGET_LIB_COMMON_INCLUDE_DIRS}
             src/lib/reference
         )
+elseif(LIBGOST34112018_TYPE STREQUAL "AVX2")
+    message("Chosen AVX2 implementation")
+
+    add_library(${TARGET_LIB} SHARED
+            ${TARGET_LIB_COMMON_FILES}
+            src/lib/avx2/gost34112018_avx2.c
+            src/lib/avx2/gost34112018_vec512_avx2.c
+        )
+
+    target_include_directories(${TARGET_LIB} PUBLIC
+            ${TARGET_LIB_COMMON_INCLUDE_DIRS}
+            src/lib/avx2
+            src/lib/optimized
+        )
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx")
 else()
     message(FATAL_ERROR "No library type given.")
 endif()

@@ -4,12 +4,13 @@
 #ifndef __GOST34112018_VEC512_H__
 #define __GOST34112018_VEC512_H__
 
+#include "gost34112018.h"
 #include "gost34112018_types.h"
 
 /**
     @brief       Little-endian unsigned 512-bit number.
 */
-union Vec512 {
+union GOST34112018_AlignAttribute(32) Vec512 {
     GostU8  bytes  [VEC512_BYTES];
     GostU16 words  [VEC512_WORDS];
     GostU32 dwords [VEC512_DWORDS];

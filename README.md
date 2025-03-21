@@ -12,9 +12,11 @@ The main justification for creation of this project was its educational value. I
 
 There are different implementations of the function. For now there are two:
 
-* **Reference implementation** (path: src/lib/reference, -DLIBGOST34112018=REFERENCE flag CMake) - a reference implementation which follows The Standard as closely as possible. It is very for educational purposes. It is recommended to study this version first, and then moving on to the optimized implementation. It is also recommended for one to have read The Standard _before_ reading the code.
+* **Reference implementation** (path: src/lib/reference, -DLIBGOST34112018=REFERENCE flag in CMake) - a reference implementation which follows The Standard as closely as possible. It is very good for educational purposes, but not performance. It is recommended to study this version first, and then moving on to the optimized implementation. It is also recommended for one to have read The Standard _before_ reading the code.
 
-* **Optimized implementation** (path: src/lib/optimized, -DLIBGOST34112018=OPTIMIZED flag CMake) - a more optimized implementation that uses lookup-tables to accelerate some computations.
+* **Optimized implementation** (path: src/lib/optimized, -DLIBGOST34112018=OPTIMIZED flag in CMake) - a more optimized implementation that uses lookup-tables to accelerate some computations.
+
+* **AVX2 implementation** (path: src/lib/avx2, -DLIBGOST34112018=AVX2 flag in CMake) - an optimized implementation that uses lookup-tables and AVX2 intrinsics to speed up computations even more.
 
 ## Building
 ### Dependencies
@@ -26,6 +28,9 @@ Only libc is needed.
 This project uses CMake as a build system. To build it, this set of commands in your terminal:
 
 ```
+# for avx2 implementation
+mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DLIBGOST34112018_TYPE=AVX2 .. && cmake --build .
+
 # for optimized implementation
 mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DLIBGOST34112018_TYPE=OPTIMIZED .. && cmake --build .
 
@@ -35,7 +40,7 @@ mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DLIBGOST34112018_TY
 
 ## Why does the code have such weird variable and function names?
 
-TLDR: To keep uniformity of naming between The Standard and the code.
+**TLDR:** To keep uniformity of naming between The Standard and the code.
 
 Since The Standard contains primarily mathematical foundations of the algorithm, it is written in a very formal and concise mathematical language. To prevent confusion caused by difference in names of variables and functions in code and in The Standard, the decision has been made to keep names as close to The Standard as possible.
 
