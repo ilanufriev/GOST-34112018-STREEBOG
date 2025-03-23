@@ -23,6 +23,8 @@ void Vec512_Add(const union Vec512 *in1,
     DebugPrintVec(in1);
     log_d("In2: ");
     DebugPrintVec(in2);
+    
+    TimerStart(t);
 
     for (int i = 0; i < VEC512_QWORDS; i++)
     {
@@ -37,6 +39,8 @@ void Vec512_Add(const union Vec512 *in1,
             carry = 0;
         }
     }
+
+    TimerEnd(t);
 
     log_d("Out: ");
     DebugPrintVec(out);
@@ -62,8 +66,12 @@ void Vec512_Xor(const union Vec512 *in1,
     log_d("In2: ");
     DebugPrintVec(in2);
 
+    TimerStart(t);
+
     avx2_out->m256is[0] = _mm256_xor_si256(avx2_in1->m256is[0], avx2_in2->m256is[0]);
     avx2_out->m256is[1] = _mm256_xor_si256(avx2_in1->m256is[1], avx2_in2->m256is[1]);
+
+    TimerEnd(t);
 
     log_d("Out: ");
     DebugPrintVec(out);
@@ -80,11 +88,15 @@ void Uint64ToVec512(const GostU64 x, union Vec512 *out)
     const GostU32 le = (x >> 0 ) & 0xffffffff;
     const GostU32 be = (x >> 32) & 0xffffffff;
 
+    TimerStart(t);
+
     avx2_out->m256is[0] = _mm256_setr_epi32(le, be, 0, 0, 0, 0, 0, 0);
     avx2_out->m256is[1] = _mm256_set1_epi32(0);
+
+    TimerEnd(t);
 }
 
-#ifdef DEBUG
+#ifdef __ENABLE_DEBUG_OUTPUT__
 void DebugPrintVec(const union Vec512 *vec)
 {
     printf("    ");

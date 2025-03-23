@@ -4,13 +4,26 @@
 #ifndef __GOST34112018_COMMON_H__
 #define __GOST34112018_COMMON_H__
 
-#ifdef DEBUG
+#ifdef __ENABLE_DEBUG_OUTPUT__
     #include "stdio.h"
     #define log_d(__fmt, ...) \
         printf("GOST34112018 [DEBUG] %s: " __fmt "\n", __func__,##__VA_ARGS__)
 #else
-    #define log_d(__fmd, ...) ;
-#endif // DEBUG
+    #define log_d(__fmd, ...)
+#endif // __ENABLE_DEBUG_OUTPUT__
+
+#ifdef __ENABLE_TIMING__
+    #include "clockwork.h"
+    #include "stdio.h"
+
+    extern struct CLKW_TimingMetaDataListHead g_timing_metadata_list;
+
+    #define TimerStart(__timer) CLKW_TimerStart(__timer, &g_timing_metadata_list);
+    #define TimerEnd(__timer)   CLKW_TimerEnd(__timer);
+#else
+    #define TimerStart(__timer) 
+    #define TimerEnd(__timer)   
+#endif
 
 #include "gost34112018.h"
 #include "gost34112018_vec512.h"

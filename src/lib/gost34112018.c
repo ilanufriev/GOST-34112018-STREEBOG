@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
 #include "gost34112018.h"
+#include "clockwork.h"
 #include "gost34112018_interface.h"
 #include "gost34112018_common.h"
 #include "gost34112018_types.h"
@@ -48,6 +49,7 @@ void Stage3(struct GOST34112018_Internal *ctx,
     union Vec512 *sigma   = &ctx->sigma;
     union Vec512  size512;
 
+    TimerStart(t);
     SplitMessage512(message, size, &m);
     Uint64ToVec512(size * BYTE_SIZE, &size512);
 
@@ -63,6 +65,7 @@ void Stage3(struct GOST34112018_Internal *ctx,
 
     G_N(h, N, &ZERO_VECTOR_512, h);
     G_N(h, sigma, &ZERO_VECTOR_512, h);
+    TimerEnd(t);
 }
 
 /**
@@ -85,6 +88,7 @@ void Stage2(struct GOST34112018_Internal *ctx,
     union Vec512 *sigma  = &ctx->sigma;
     union Vec512  vec512;
 
+    TimerStart(t);
     Uint64ToVec512(512, &vec512);
 
     while (current_size >= BLOCK_SIZE)
@@ -103,6 +107,7 @@ void Stage2(struct GOST34112018_Internal *ctx,
     }
 
     Stage3(ctx, message, current_size);
+    TimerEnd(t);
 }
 
 /**
@@ -123,6 +128,7 @@ void Stage2_SingleCycle(struct GOST34112018_Internal *ctx,
     union Vec512 *sigma = &ctx->sigma;
     union Vec512  vec512;
 
+    TimerStart(t);
     SplitMessage512(message, BLOCK_SIZE, &m);
 
     Uint64ToVec512(512, &vec512);
@@ -134,6 +140,7 @@ void Stage2_SingleCycle(struct GOST34112018_Internal *ctx,
 
     Vec512_Add(sigma, &m, &r1);
     *sigma = r1;
+    TimerEnd(t);
 }
 
 /**
@@ -146,6 +153,7 @@ static
 void InitInternal(struct GOST34112018_Internal *ctx,
                  const union  Vec512           *init_vector)
 {
+    TimerStart(t);
     ctx->h     = *init_vector;
     ctx->N     = ZERO_VECTOR_512;
     ctx->sigma = ZERO_VECTOR_512;
@@ -183,6 +191,7 @@ void GOST34112018_HashBlock(const unsigned char          *data_block,
                             const unsigned long long      data_block_size,
                             struct GOST34112018_Context  *ctx)
 {
+    TimerStart(t);
     if (data_block_size < BLOCK_SIZE)
     {
         Stage3((struct GOST34112018_Internal *) ctx, data_block, data_block_size);
@@ -193,6 +202,7 @@ void GOST34112018_HashBlock(const unsigned char          *data_block,
     }
 
     ctx->prev_block_size = data_block_size;
+    TimerEnd(t);
 }
 
 public_api
@@ -202,6 +212,17 @@ void GOST34112018_HashBlockEnd(struct GOST34112018_Context *ctx)
     {
         GOST34112018_HashBlock(GostNull, 0, ctx);
     }
+
+#ifdef __ENABLE_TIMING__
+    double total_secs = 0.0;
+    struct CLKW_TimingMetaData *meta = g_timing_metadata_list.first;
+    while(meta)
+    {
+        printf("[TIMING] %s: %f secs.\n", meta->func_name, ((double) meta->clk) / CLOCKS_PER_SEC);
+        total_secs += ((double) meta->clk) / CLOCKS_PER_SEC;
+        meta = meta->next;
+    }
+#endif
 }
 
 public_api

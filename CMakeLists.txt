@@ -1,6 +1,13 @@
 # Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
 # SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
+# This is the main CMakeLists.txt of the project. Some options you can choose to 
+# affect the building process:
+# * CMAKE_BUILD_TYPE=Debug/Release - Debug enables debug output.
+# * LIBGOST34112018_TYPE=OPTIMIZED/REFERENCE/AVX2 - chooses corresponding implementation.
+# * ENABLE_DEBUG_OUTPUT=True/False - to enable/disable debug output.
+# * ENABLE_TIMING=True/False - to enable/disable timing of the functions.
+
 cmake_minimum_required(VERSION 3.20)
 
 project(libgost34112018 VERSION 0.3.0)
@@ -16,12 +23,14 @@ set(TARGET_UTIL gost34112018_cli)
 set(TARGET_LIB_COMMON_FILES
         src/lib/gost34112018_common.c
         src/lib/gost34112018.c
+        src/lib/clockwork/clockwork.c
     )
 
 set(TARGET_LIB_COMMON_INCLUDE_DIRS
         include
         src
         src/lib
+        src/lib/clockwork
     )
 
 if(NOT LIBGOST34112018_TYPE)
@@ -61,7 +70,7 @@ elseif(LIBGOST34112018_TYPE STREQUAL "REFERENCE")
             src/lib/reference
         )
 elseif(LIBGOST34112018_TYPE STREQUAL "AVX2")
-    message("Chosen AVX2 implementation")
+    message("Chosen AVX2 implementation.")
 
     add_library(${TARGET_LIB} SHARED
             ${TARGET_LIB_COMMON_FILES}
@@ -87,21 +96,29 @@ target_link_libraries(${TARGET_TEST} PUBLIC ${TARGET_LIB})
 target_link_libraries(${TARGET_UTIL} PUBLIC ${TARGET_LIB})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message("Using debug compile options")
+    message("Using debug compile options.")
     target_compile_options(${TARGET_LIB} PUBLIC
             -Wall
             -Wextra
             -Wpedantic
-            -fsanitize=address
-            -fsanitize=undefined
+            # -fsanitize=address
+            # -fsanitize=undefined
         )
 
     target_link_options(${TARGET_LIB} PUBLIC
-            -fsanitize=address
-            -fsanitize=undefined
+            # -fsanitize=address
+            # -fsanitize=undefined
         )
 
-        target_compile_definitions(${TARGET_LIB} PUBLIC DEBUG)
-        target_compile_definitions(${TARGET_TEST} PUBLIC DEBUG)
-        target_compile_definitions(${TARGET_UTIL} PUBLIC DEBUG)
+    if(ENABLE_DEBUG_OUTPUT)
+        message("Debug messages enabled.")
+        target_compile_definitions(${TARGET_LIB}  PUBLIC __ENABLE_DEBUG_OUTPUT__)
+        target_compile_definitions(${TARGET_TEST} PUBLIC __ENABLE_DEBUG_OUTPUT__)
+        target_compile_definitions(${TARGET_UTIL} PUBLIC __ENABLE_DEBUG_OUTPUT__)
+    endif()
+endif()
+
+if(ENABLE_TIMING)
+    message("Timing enabled.")
+    target_compile_definitions(${TARGET_LIB} PUBLIC __ENABLE_TIMING__)
 endif()

@@ -22,7 +22,11 @@ void XTransform(const union Vec512 *a, const union Vec512 *k, union Vec512 *out)
     log_d("K: ");
     DebugPrintVec(k);
 
+    TimerStart(t);
+
     Vec512_Xor(a, k, out);
+
+    TimerEnd(t);
 
     log_d("Out: ");
     DebugPrintVec(out);
@@ -41,6 +45,8 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
     log_d("P transformation:");
     log_d("a: ");
     DebugPrintVec(a);
+
+    TimerStart(t);
 
     avx2_out->m256is[0] = _mm256_setr_epi8(
             a->bytes[TAU[ 0]], a->bytes[TAU[ 1]], a->bytes[TAU[ 2]], a->bytes[TAU[ 3]],
@@ -64,6 +70,8 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
             a->bytes[TAU[60]], a->bytes[TAU[61]], a->bytes[TAU[62]], a->bytes[TAU[63]]
         );
 
+    TimerEnd(t);
+
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -83,82 +91,84 @@ void SLCombinedTransform(const union Vec512 *a, union Vec512 *out)
     log_d("a: ");
     DebugPrintVec(a);
 
+    TimerStart(t);
     avx2_out->m256is[0] = _mm256_setr_epi64x(
-        SL_transform_precomp[0][((a->qwords[0] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[0] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[0] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[0] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[0] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[0] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[0] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[0] >> (7 * 8)) & 0xFF)],
+            SL_transform_precomp[0][a->bytes[ 0]] ^
+            SL_transform_precomp[1][a->bytes[ 1]] ^
+            SL_transform_precomp[2][a->bytes[ 2]] ^
+            SL_transform_precomp[3][a->bytes[ 3]] ^
+            SL_transform_precomp[4][a->bytes[ 4]] ^
+            SL_transform_precomp[5][a->bytes[ 5]] ^
+            SL_transform_precomp[6][a->bytes[ 6]] ^
+            SL_transform_precomp[7][a->bytes[ 7]],
 
-        SL_transform_precomp[0][((a->qwords[1] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[1] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[1] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[1] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[1] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[1] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[1] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[1] >> (7 * 8)) & 0xFF)],
+            SL_transform_precomp[0][a->bytes[ 8]] ^
+            SL_transform_precomp[1][a->bytes[ 9]] ^
+            SL_transform_precomp[2][a->bytes[10]] ^
+            SL_transform_precomp[3][a->bytes[11]] ^
+            SL_transform_precomp[4][a->bytes[12]] ^
+            SL_transform_precomp[5][a->bytes[13]] ^
+            SL_transform_precomp[6][a->bytes[14]] ^
+            SL_transform_precomp[7][a->bytes[15]],
 
-        SL_transform_precomp[0][((a->qwords[2] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[2] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[2] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[2] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[2] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[2] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[2] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[2] >> (7 * 8)) & 0xFF)],
+            SL_transform_precomp[0][a->bytes[16]] ^
+            SL_transform_precomp[1][a->bytes[17]] ^
+            SL_transform_precomp[2][a->bytes[18]] ^
+            SL_transform_precomp[3][a->bytes[19]] ^
+            SL_transform_precomp[4][a->bytes[20]] ^
+            SL_transform_precomp[5][a->bytes[21]] ^
+            SL_transform_precomp[6][a->bytes[22]] ^
+            SL_transform_precomp[7][a->bytes[23]],
 
-        SL_transform_precomp[0][((a->qwords[3] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[3] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[3] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[3] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[3] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[3] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[3] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[3] >> (7 * 8)) & 0xFF)]
-    );
+            SL_transform_precomp[0][a->bytes[24]] ^
+            SL_transform_precomp[1][a->bytes[25]] ^
+            SL_transform_precomp[2][a->bytes[26]] ^
+            SL_transform_precomp[3][a->bytes[27]] ^
+            SL_transform_precomp[4][a->bytes[28]] ^
+            SL_transform_precomp[5][a->bytes[29]] ^
+            SL_transform_precomp[6][a->bytes[30]] ^
+            SL_transform_precomp[7][a->bytes[31]]
+        );
 
     avx2_out->m256is[1] = _mm256_setr_epi64x(
-        SL_transform_precomp[0][((a->qwords[4] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[4] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[4] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[4] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[4] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[4] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[4] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[4] >> (7 * 8)) & 0xFF)],
+            SL_transform_precomp[0][a->bytes[32]] ^
+            SL_transform_precomp[1][a->bytes[33]] ^
+            SL_transform_precomp[2][a->bytes[34]] ^
+            SL_transform_precomp[3][a->bytes[35]] ^
+            SL_transform_precomp[4][a->bytes[36]] ^
+            SL_transform_precomp[5][a->bytes[37]] ^
+            SL_transform_precomp[6][a->bytes[38]] ^
+            SL_transform_precomp[7][a->bytes[39]],
 
-        SL_transform_precomp[0][((a->qwords[5] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[5] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[5] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[5] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[5] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[5] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[5] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[5] >> (7 * 8)) & 0xFF)],
+            SL_transform_precomp[0][a->bytes[40]] ^
+            SL_transform_precomp[1][a->bytes[41]] ^
+            SL_transform_precomp[2][a->bytes[42]] ^
+            SL_transform_precomp[3][a->bytes[43]] ^
+            SL_transform_precomp[4][a->bytes[44]] ^
+            SL_transform_precomp[5][a->bytes[45]] ^
+            SL_transform_precomp[6][a->bytes[46]] ^
+            SL_transform_precomp[7][a->bytes[47]],
 
-        SL_transform_precomp[0][((a->qwords[6] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[6] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[6] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[6] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[6] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[6] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[6] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[6] >> (7 * 8)) & 0xFF)],
+            SL_transform_precomp[0][a->bytes[48]] ^
+            SL_transform_precomp[1][a->bytes[49]] ^
+            SL_transform_precomp[2][a->bytes[50]] ^
+            SL_transform_precomp[3][a->bytes[51]] ^
+            SL_transform_precomp[4][a->bytes[52]] ^
+            SL_transform_precomp[5][a->bytes[53]] ^
+            SL_transform_precomp[6][a->bytes[54]] ^
+            SL_transform_precomp[7][a->bytes[55]],
 
-        SL_transform_precomp[0][((a->qwords[7] >> (0 * 8)) & 0xFF)] ^
-        SL_transform_precomp[1][((a->qwords[7] >> (1 * 8)) & 0xFF)] ^
-        SL_transform_precomp[2][((a->qwords[7] >> (2 * 8)) & 0xFF)] ^
-        SL_transform_precomp[3][((a->qwords[7] >> (3 * 8)) & 0xFF)] ^
-        SL_transform_precomp[4][((a->qwords[7] >> (4 * 8)) & 0xFF)] ^
-        SL_transform_precomp[5][((a->qwords[7] >> (5 * 8)) & 0xFF)] ^
-        SL_transform_precomp[6][((a->qwords[7] >> (6 * 8)) & 0xFF)] ^
-        SL_transform_precomp[7][((a->qwords[7] >> (7 * 8)) & 0xFF)]
-    );
+            SL_transform_precomp[0][a->bytes[56]] ^
+            SL_transform_precomp[1][a->bytes[57]] ^
+            SL_transform_precomp[2][a->bytes[58]] ^
+            SL_transform_precomp[3][a->bytes[59]] ^
+            SL_transform_precomp[4][a->bytes[60]] ^
+            SL_transform_precomp[5][a->bytes[61]] ^
+            SL_transform_precomp[6][a->bytes[62]] ^
+            SL_transform_precomp[7][a->bytes[63]]
+        );
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -179,9 +189,12 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
     log_d("prev_K: ");
     DebugPrintVec(prev_K);
 
+    TimerStart(t);
     if (i == 0)
     {
         *out = *prev_K;
+
+        TimerEnd(t);
         return;
     }
 
@@ -189,6 +202,7 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
     PTransform(&r1, &r2);
     SLCombinedTransform(&r2, out);
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -207,6 +221,7 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     log_d("K_1 = K:");
     DebugPrintVec(K);
 
+    TimerStart(t);
     // K_1 = K
     XTransform(m, K, &r1);
     PTransform(&r1, &r2);
@@ -226,6 +241,7 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     K_i(C_SIZE, &prev_K, &prev_K);
     XTransform(&new_m, &prev_K, out);
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -245,6 +261,7 @@ void G_N(const union Vec512 *h,
     log_d("N: ");
     DebugPrintVec(N);
 
+    TimerStart(t);
     Vec512_Xor(h, N, &r1);
 
     PTransform(&r1, &r2);
@@ -254,6 +271,7 @@ void G_N(const union Vec512 *h,
     Vec512_Xor(&r2, h, &r1);
     Vec512_Xor(&r1, m, out);
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }

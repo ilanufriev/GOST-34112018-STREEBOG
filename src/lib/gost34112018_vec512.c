@@ -11,35 +11,38 @@
     @param      in2 - second operand.
     @param      out - output pointer.
  */
- void Vec512_Add(const union Vec512 *in1,
-                 const union Vec512 *in2,
-                       union Vec512 *out)
- {
-     GostU64 carry = 0;
+void Vec512_Add(const union Vec512 *in1,
+                const union Vec512 *in2,
+                      union Vec512 *out)
+{
+    GostU64 carry = 0;
+    
+    log_d("Added vectors:");
+    log_d("In1: ");
+    DebugPrintVec(in1);
+    log_d("In2: ");
+    DebugPrintVec(in2);
 
-     log_d("Added vectors:");
-     log_d("In1: ");
-     DebugPrintVec(in1);
-     log_d("In2: ");
-     DebugPrintVec(in2);
+    TimerStart(t);
 
-     for (int i = 0; i < VEC512_QWORDS; i++)
-     {
-         out->qwords[i] = in1->qwords[i] + in2->qwords[i] + carry;
+    for (int i = 0; i < VEC512_QWORDS; i++)
+    {
+        out->qwords[i] = in1->qwords[i] + in2->qwords[i] + carry;
 
-         if (in2->qwords[i] > (MAX_GOSTU64 - in1->qwords[i]))
-         {
-             carry = 1;
-         }
-         else
-         {
-             carry = 0;
-         }
-     }
+        if (in2->qwords[i] > (MAX_GOSTU64 - in1->qwords[i]))
+        {
+            carry = 1;
+        }
+        else
+        {
+            carry = 0;
+        }
+    }
 
-     log_d("Out: ");
-     DebugPrintVec(out);
- }
+    TimerEnd(t);
+    log_d("Out: ");
+    DebugPrintVec(out);
+}
 
 /**
     @brief      Vec512 XOR operation.
@@ -47,24 +50,26 @@
     @param      in2 - second operand.
     @param      out - output pointer.
  */
- void Vec512_Xor(const union Vec512 *in1,
-                 const union Vec512 *in2,
-                       union Vec512 *out)
- {
-     log_d("XOR'ed vectors:");
-     log_d("In1: ");
-     DebugPrintVec(in1);
-     log_d("In2: ");
-     DebugPrintVec(in2);
+void Vec512_Xor(const union Vec512 *in1,
+                const union Vec512 *in2,
+                    union Vec512 *out)
+{
+    log_d("XOR'ed vectors:");
+    log_d("In1: ");
+    DebugPrintVec(in1);
+    log_d("In2: ");
+    DebugPrintVec(in2);
 
-     for (int i = 0; i < VEC512_QWORDS; i++)
-     {
-         out->qwords[i] = in1->qwords[i] ^ in2->qwords[i];
-     }
+    TimerStart(t);
+    for (int i = 0; i < VEC512_QWORDS; i++)
+    {
+        out->qwords[i] = in1->qwords[i] ^ in2->qwords[i];
+    }
 
-     log_d("Out: ");
-     DebugPrintVec(out);
- }
+    TimerEnd(t);
+    log_d("Out: ");
+    DebugPrintVec(out);
+}
 
 /**
     @brief       Uint64 to Vec512 conversion function.
@@ -73,6 +78,7 @@
  */
 void Uint64ToVec512(const GostU64 x, union Vec512 *out)
 {
+    TimerStart(t);
     out->qwords[7] = 0;
     out->qwords[6] = 0;
     out->qwords[5] = 0;
@@ -81,10 +87,11 @@ void Uint64ToVec512(const GostU64 x, union Vec512 *out)
     out->qwords[2] = 0;
     out->qwords[1] = 0;
     out->qwords[0] = x;
+    TimerEnd(t);
 }
 
 
-#ifdef DEBUG
+#ifdef __ENABLE_DEBUG_OUTPUT__
 void DebugPrintVec(const union Vec512 *vec)
 {
     printf("    ");
@@ -103,4 +110,4 @@ void DebugPrintVec(const union Vec512 *out)
 {
 
 }
-#endif // DEBUG
+#endif // __ENABLE_DEBUG_OUTPUT__

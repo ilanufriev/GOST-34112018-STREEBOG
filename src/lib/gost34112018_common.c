@@ -3,6 +3,12 @@
 
 #include "gost34112018_common.h"
 
+#ifdef __ENABLE_TIMING__
+
+struct CLKW_TimingMetaDataListHead g_timing_metadata_list = { NULL, NULL };
+
+#endif
+
 const GostU8 PI[256] = {
     252, 238, 221,  17, 207, 110,  49,  22,
     251, 196, 250, 218,  35, 197,   4,  77,

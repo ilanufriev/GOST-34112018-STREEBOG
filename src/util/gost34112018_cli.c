@@ -17,9 +17,11 @@
 const char *argp_application_version = "gost34112018_cli ver. 0.1";
 const char *argp_application_bug_address = "anufriewwi@rambler.ru";
 
-int g_opt_hash_size = 512;
-bool g_opt_big_endian = false;
-bool g_opt_no_nline = false;
+int g_opt_hash_size     = 512;
+bool g_opt_big_endian   = false;
+bool g_opt_no_nline     = false;
+bool g_opt_file_mode    = false;
+char *g_filename        = NULL;
 
 static struct argp_option options[] = {
     {
@@ -46,6 +48,14 @@ static struct argp_option options[] = {
         "Print hash with no newline character at the end.",
         0
     },
+    {
+        "file",
+        'f',
+        "FILENAME",
+        0,
+        "Compute hash of the file with name FILENAME.",
+        0
+    },
     {0}
 };
 
@@ -59,6 +69,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             break;
         case 'n':
             g_opt_no_nline = true;
+            break;
+        case 'f':
+            g_opt_file_mode = true;
+            g_filename = arg;
             break;
         default:
             return ARGP_ERR_UNKNOWN;
@@ -79,6 +93,8 @@ enum
 
 int main(int argc, char **argv)
 {
+    FILE *fin = NULL;
+
     int32_t rc = 0;
     uint8_t buffer[BLOCK_SIZE];
     uint8_t hash[BLOCK_SIZE];
@@ -90,6 +106,16 @@ int main(int argc, char **argv)
     {
         exit(EINVAL);
     }
+
+    if (g_opt_file_mode)
+    {
+        fin = fopen(g_filename, "rb");
+    }
+    else
+    {
+        fin = stdin;
+    }
+
 
     if (g_opt_hash_size == 512)
     {
@@ -105,9 +131,9 @@ int main(int argc, char **argv)
         exit(EINVAL);
     }
 
-    while (!feof(stdin))
+    while (!feof(fin))
     {
-        rc = fread(buffer + rc, 1, BLOCK_SIZE - rc, stdin);
+        rc = fread(buffer + rc, 1, BLOCK_SIZE - rc, fin);
         if (rc < 0 && (errno == EINTR))
         {
             continue;
@@ -115,7 +141,7 @@ int main(int argc, char **argv)
 
         if (rc < 0)
         {
-            log_err("An error occurred while trying to read data from stdin");
+            log_err("An error occurred while trying to read data");
             exit(EIO);
         }
 
@@ -156,6 +182,9 @@ int main(int argc, char **argv)
     {
         putc('\n', stdout);
     }
+
+    if (g_opt_file_mode)
+        fclose(fin);
 
     return 0;
 }
