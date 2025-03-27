@@ -1,7 +1,7 @@
 # Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
 # SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
-# This is the main CMakeLists.txt of the project. Some options you can choose to 
+# This is the main CMakeLists.txt of the project. Some options you can choose to
 # affect the building process:
 # * CMAKE_BUILD_TYPE=Debug/Release - Debug enables debug output.
 # * LIBGOST34112018_TYPE=OPTIMIZED/REFERENCE/AVX2 - chooses corresponding implementation.
@@ -56,6 +56,8 @@ if(LIBGOST34112018_TYPE STREQUAL "OPTIMIZED")
             ${TARGET_LIB_COMMON_INCLUDE_DIRS}
             src/lib/optimized
         )
+
+    # target_compile_options(${TARGET_LIB} PUBLIC -fopenmp)
 elseif(LIBGOST34112018_TYPE STREQUAL "REFERENCE")
     message("Chosen REFERENCE implementation.")
 
@@ -74,16 +76,15 @@ elseif(LIBGOST34112018_TYPE STREQUAL "AVX2")
 
     add_library(${TARGET_LIB} SHARED
             ${TARGET_LIB_COMMON_FILES}
-            src/lib/avx2/gost34112018_avx2.c
+            src/lib/optimized/gost34112018_optimized.c
             src/lib/avx2/gost34112018_vec512_avx2.c
         )
 
     target_include_directories(${TARGET_LIB} PUBLIC
             ${TARGET_LIB_COMMON_INCLUDE_DIRS}
-            src/lib/avx2
             src/lib/optimized
+            src/lib/avx2
         )
-
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx")
 else()
     message(FATAL_ERROR "No library type given.")

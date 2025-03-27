@@ -16,7 +16,7 @@ void Vec512_Add(const union Vec512 *in1,
                       union Vec512 *out)
 {
     GostU64 carry = 0;
-    
+
     log_d("Added vectors:");
     log_d("In1: ");
     DebugPrintVec(in1);
@@ -52,7 +52,7 @@ void Vec512_Add(const union Vec512 *in1,
  */
 void Vec512_Xor(const union Vec512 *in1,
                 const union Vec512 *in2,
-                    union Vec512 *out)
+                      union Vec512 *out)
 {
     log_d("XOR'ed vectors:");
     log_d("In1: ");

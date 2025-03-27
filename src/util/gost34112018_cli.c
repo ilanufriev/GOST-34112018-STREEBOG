@@ -13,6 +13,13 @@
 #include "stdlib.h"
 #include "argp.h"
 #include "stdbool.h"
+#include "sys/resource.h"
+
+#define log_err(__fmt, ...) \
+    fprintf(stderr, "[ERROR, %s] " __fmt "\n", __func__, ##__VA_ARGS__)
+
+#define log_debug(__fmt, ...) \
+    fprintf(stdout, "[DEBUG, %s] " __fmt "\n", __func__, ##__VA_ARGS__)
 
 const char *argp_application_version = "gost34112018_cli ver. 0.1";
 const char *argp_application_bug_address = "anufriewwi@rambler.ru";
@@ -22,6 +29,12 @@ bool g_opt_big_endian   = false;
 bool g_opt_no_nline     = false;
 bool g_opt_file_mode    = false;
 char *g_filename        = NULL;
+
+enum
+{
+    INTERNAL_BUFFER_SIZE = 65536,
+    BLOCK_SIZE = 64,
+};
 
 static struct argp_option options[] = {
     {
@@ -80,24 +93,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     return 0;
 }
 
-#define log_err(__fmt, ...) \
-    fprintf(stderr, "[ERROR, %s] " __fmt "\n", __func__, ##__VA_ARGS__)
-
-#define log_debug(__fmt, ...) \
-    fprintf(stdout, "[DEBUG, %s] " __fmt "\n", __func__, ##__VA_ARGS__)
-
-enum
-{
-    BLOCK_SIZE = 64,
-};
-
 int main(int argc, char **argv)
 {
     FILE *fin = NULL;
 
     int32_t rc = 0;
-    uint8_t buffer[BLOCK_SIZE];
     uint8_t hash[BLOCK_SIZE];
+    static uint8_t buffer[INTERNAL_BUFFER_SIZE];
     struct GOST34112018_Context ctx;
 
     struct argp argp = { options, parse_opt, "[ARGS...]", "My program description.", 0, 0, 0 };
@@ -110,12 +112,16 @@ int main(int argc, char **argv)
     if (g_opt_file_mode)
     {
         fin = fopen(g_filename, "rb");
+        if (!fin)
+        {
+            fprintf(stderr, "Could not open file %s", g_filename);
+            exit(ENOENT);
+        }
     }
     else
     {
         fin = stdin;
     }
-
 
     if (g_opt_hash_size == 512)
     {
@@ -133,7 +139,7 @@ int main(int argc, char **argv)
 
     while (!feof(fin))
     {
-        rc = fread(buffer + rc, 1, BLOCK_SIZE - rc, fin);
+        rc = fread(buffer + rc, 1, INTERNAL_BUFFER_SIZE - rc, fin);
         if (rc < 0 && (errno == EINTR))
         {
             continue;
@@ -146,21 +152,34 @@ int main(int argc, char **argv)
         }
 
         // In some cases fread may not read all 64 bytes. This makes sure it does
-        if (rc < BLOCK_SIZE)
+        if (rc < INTERNAL_BUFFER_SIZE)
         {
             continue;
         }
 
-        GOST34112018_HashBlock(buffer, rc, &ctx);
+        for (int i = 0; i < rc; i += BLOCK_SIZE)
+        {
+            GOST34112018_HashBlock(buffer + i, BLOCK_SIZE, &ctx);
+        }
         rc = 0;
     }
 
+    // we hit feof, but rc is not empty
     if (rc != 0)
     {
-        GOST34112018_HashBlock(buffer, rc, &ctx);
+        int i;
+        for (i = 0; (i + BLOCK_SIZE) < rc; i += BLOCK_SIZE)
+        {
+            GOST34112018_HashBlock(buffer + i, BLOCK_SIZE, &ctx);
+        }
+
+        // Hash the rest of the message
+        GOST34112018_HashBlock(buffer + i, rc - i, &ctx);
     }
 
+    // Finish the hashing process correctly
     GOST34112018_HashBlockEnd(&ctx);
+
     GOST34112018_GetHashFromContext(&ctx, hash);
 
     if (g_opt_big_endian)
@@ -177,6 +196,7 @@ int main(int argc, char **argv)
             printf("%02x", hash[i]);
         }
     }
+
 
     if (!g_opt_no_nline)
     {

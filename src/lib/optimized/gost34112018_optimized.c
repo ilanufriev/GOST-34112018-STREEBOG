@@ -5,6 +5,7 @@
 #include "gost34112018_optimized_precomp.h"
 #include "gost34112018_common.h"
 #include "gost34112018_interface.h"
+#include "gost34112018_types.h"
 
 /**
     @brief     This function computes a lookup table for L (ch. 5.3) and S (ch. 5.2)
@@ -60,7 +61,9 @@ void XTransform(const union Vec512 *a, const union Vec512 *k, union Vec512 *out)
     log_d("K: ");
     DebugPrintVec(k);
 
+    TimerStart(t);
     Vec512_Xor(a, k, out);
+    TimerEnd(t);
 
     log_d("Out: ");
     DebugPrintVec(out);
@@ -78,11 +81,13 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
     log_d("a: ");
     DebugPrintVec(a);
 
+    TimerStart(t);
     for (int i = 0; i < VEC512_BYTES; i++)
     {
         out->bytes[i] = a->bytes[TAU[i]];
     }
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -100,6 +105,7 @@ void SLCombinedTransform(const union Vec512 *a, union Vec512 *out)
     log_d("a: ");
     DebugPrintVec(a);
 
+    TimerStart(t);
     for (GostU32 i = 0; i < VEC512_QWORDS; i++)
     {
         GostU64 c = 0;
@@ -112,6 +118,7 @@ void SLCombinedTransform(const union Vec512 *a, union Vec512 *out)
         out->qwords[i] = c;
     }
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -132,6 +139,7 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
     log_d("prev_K: ");
     DebugPrintVec(prev_K);
 
+    TimerStart(t);
     if (i == 0)
     {
         *out = *prev_K;
@@ -142,6 +150,7 @@ void K_i(const GostU8 i, const union Vec512 *prev_K, union Vec512 *out)
     PTransform(&r1, &r2);
     SLCombinedTransform(&r2, out);
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -160,6 +169,7 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     log_d("K_1 = K:");
     DebugPrintVec(K);
 
+    TimerStart(t);
     // K_1 = K
     XTransform(m, K, &r1);
     PTransform(&r1, &r2);
@@ -179,6 +189,7 @@ void E(const union Vec512 *K, const union Vec512 *m, union Vec512 *out)
     K_i(C_SIZE, &prev_K, &prev_K);
     XTransform(&new_m, &prev_K, out);
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }
@@ -197,6 +208,7 @@ void G_N(const union Vec512 *h,
     DebugPrintVec(m);
     log_d("N: ");
     DebugPrintVec(N);
+    TimerStart(t);
 
     Vec512_Xor(h, N, &r1);
 
@@ -207,6 +219,7 @@ void G_N(const union Vec512 *h,
     Vec512_Xor(&r2, h, &r1);
     Vec512_Xor(&r1, m, out);
 
+    TimerEnd(t);
     log_d("Out: ");
     DebugPrintVec(out);
 }

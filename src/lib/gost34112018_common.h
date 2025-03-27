@@ -21,8 +21,8 @@
     #define TimerStart(__timer) CLKW_TimerStart(__timer, &g_timing_metadata_list);
     #define TimerEnd(__timer)   CLKW_TimerEnd(__timer);
 #else
-    #define TimerStart(__timer) 
-    #define TimerEnd(__timer)   
+    #define TimerStart(__timer)
+    #define TimerEnd(__timer)
 #endif
 
 #include "gost34112018.h"

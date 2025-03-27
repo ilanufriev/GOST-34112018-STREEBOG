@@ -1,8 +1,8 @@
 // Copyright 2025, Anufriev Ilia, anufriewwi@rambler.ru
 // SPDX-License-Identifier: BSD-3-Clause-No-Military-License OR GPL-3.0-or-later
 
-#include "gost34112018.h"
 #include "clockwork.h"
+#include "gost34112018.h"
 #include "gost34112018_interface.h"
 #include "gost34112018_common.h"
 #include "gost34112018_types.h"
@@ -157,6 +157,7 @@ void InitInternal(struct GOST34112018_Internal *ctx,
     ctx->h     = *init_vector;
     ctx->N     = ZERO_VECTOR_512;
     ctx->sigma = ZERO_VECTOR_512;
+    TimerEnd(t);
 }
 
 /**
@@ -214,7 +215,6 @@ void GOST34112018_HashBlockEnd(struct GOST34112018_Context *ctx)
     }
 
 #ifdef __ENABLE_TIMING__
-    double total_secs = 0.0;
     struct CLKW_TimingMetaData *meta = g_timing_metadata_list.first;
     while(meta)
     {

@@ -23,7 +23,7 @@ void Vec512_Add(const union Vec512 *in1,
     DebugPrintVec(in1);
     log_d("In2: ");
     DebugPrintVec(in2);
-    
+
     TimerStart(t);
 
     for (int i = 0; i < VEC512_QWORDS; i++)
