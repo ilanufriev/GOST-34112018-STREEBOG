@@ -14,6 +14,7 @@
 #include "argp.h"
 #include "stdbool.h"
 #include "sys/resource.h"
+#include <time.h>
 
 #define log_err(__fmt, ...) \
     fprintf(stderr, "[ERROR, %s] " __fmt "\n", __func__, ##__VA_ARGS__)
@@ -196,7 +197,6 @@ int main(int argc, char **argv)
             printf("%02x", hash[i]);
         }
     }
-
 
     if (!g_opt_no_nline)
     {

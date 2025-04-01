@@ -68,7 +68,7 @@ extern const GostU64 A[64];
     @note       All constants are Little-Endian unsigned 512-bit numbers, which means that,
                 for example, C1.bytes[0] is LSB and C1.bytes[63] is MSB.
  */
-extern const union Vec512 *C[];
+extern const union Vec512 * const C[];
 
 /**
     @brief      Initialization vector for the 256-bit long digest, as defined in ch. 5.1

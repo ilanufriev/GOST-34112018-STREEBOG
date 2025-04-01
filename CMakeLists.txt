@@ -102,6 +102,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -Wall
             -Wextra
             -Wpedantic
+            -fstack-usage
             # -fsanitize=address
             # -fsanitize=undefined
         )

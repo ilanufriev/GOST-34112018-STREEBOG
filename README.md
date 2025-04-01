@@ -16,7 +16,7 @@ There are different implementations of the function. For now there are two:
 
 * **Optimized implementation** (path: src/lib/optimized, -DLIBGOST34112018=OPTIMIZED flag in CMake) - a more optimized implementation that uses lookup-tables to accelerate some computations.
 
-* **AVX2 implementation** (path: src/lib/avx2, -DLIBGOST34112018=AVX2 flag in CMake) - an optimized implementation that uses lookup-tables and AVX2 intrinsics to speed up computations even more.
+* **AVX2 implementation** (path: src/lib/avx2, -DLIBGOST34112018=AVX2 flag in CMake) - an optimized implementation that uses lookup-tables and AVX2 intrinsics for some Vec512 operations.
 
 ## Building
 ### Dependencies

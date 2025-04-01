@@ -87,7 +87,7 @@ const union Vec512 C1 = {
     }
 };
 
-union Vec512 C2 = {
+const union Vec512 C2 = {
     .bytes = {
         0xb7, 0x9b, 0xb1, 0x21, 0x70, 0x04, 0x79, 0xe6,
         0x56, 0xcd, 0xcb, 0xd7, 0x1b, 0xa2, 0xdd, 0x55,
@@ -231,8 +231,8 @@ const union Vec512 C12 = {
     }
 };
 
-const union Vec512 *C[] = { &C1, &C2, &C3,  &C4,  &C5,  &C6,
-                            &C7, &C8, &C9, &C10, &C11, &C12 };
+const union Vec512 * const C[] = { &C1, &C2, &C3,  &C4,  &C5,  &C6,
+                                   &C7, &C8, &C9, &C10, &C11, &C12 };
 
 const union Vec512 INIT_VECTOR_256 = {
     .qwords = {

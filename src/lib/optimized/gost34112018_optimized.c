@@ -101,7 +101,7 @@ void PTransform(const union Vec512 *a, union Vec512 *out)
 static
 void SLCombinedTransform(const union Vec512 *a, union Vec512 *out)
 {
-    log_d("PL transformation:");
+    log_d("SL transformation:");
     log_d("a: ");
     DebugPrintVec(a);
 
