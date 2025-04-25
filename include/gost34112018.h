@@ -11,6 +11,10 @@
     #error "For now only gcc and clang are supported."
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     GOST34112018_Hash256 = 32,
     GOST34112018_Hash512 = 64,
@@ -81,5 +85,9 @@ void GOST34112018_HashBlockEnd(struct GOST34112018_Context *ctx);
  */
 void GOST34112018_GetHashFromContext(const struct GOST34112018_Context *ctx,
                                      unsigned char                     *out);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // __GOST34112018_H__
